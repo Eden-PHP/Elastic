@@ -17,43 +17,51 @@ namespace Eden\Elastic;
  * @author   Charles Zamora <czamora@openovate.com>
  * @standard PSR-2
  */
-class Index extends \Eden\Elastic\Base
+class Index extends Resource
 {
     /**
-     * Build's the connection string.
+     * Unable to connect error.
      *
-     * @param   string
-     * @param   int
-     * @param   bool
-     * @param   array
+     * @const string
+     */
+    const UNABLE_TO_CONNECT = 'Unable to connect to host: %s';
+
+    /**
+     * Connect to elastic api.
+     *
      * @return  Eden\Elastic\Index
      */
-    public function __construct(
-        $host = 'localhost', 
-        $port = 9200, 
-        $secure = false,
-        $headers = array())
+    public function connect()
     {
-        // set the host
-        $this->host    = $host;
-        // set the port
-        $this->port    = $port;
-        // set the secure
-        $this->secure  = $secure;
-        // set the headers
-        $this->headers = array();
+        // initialize resource
+        $this->resource = \Eden\Curl\Index::i();
 
-        // what's our protocol?
-        $protocol = 'http';
-
-        // if we're on secure
-        if($this->secure) {
-            $protocol = 'https';
+        try {
+            // let's test the connection
+            $response = $this->resource
+            // set the resource url
+            ->setUrl($this->url) 
+            // get json response
+            ->getJsonResponse();
+        } catch(\Exception $e) {
+            // throw up an exception
+            return Exception::i($e->getMessage())->trigger();
         }
 
-        // build out the connection url
-        $this->url = $protocol . '://' . $this->host . ':' . $this->port;
+        // do we have a response?
+        if(empty($response)) {
+            // throw up an exception
+            return Exception::i(sprintf(self::UNABLE_TO_CONNECT, $this->url))->trigger();
+        }
 
+        // set the connection information
+        $this->elastic = $response;
+        
         return $this;
+    }
+
+    public function debug($message)
+    {
+        return \Eden\Core\Inspect::i()->inspect($message);
     }
 }
