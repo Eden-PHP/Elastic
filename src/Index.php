@@ -56,10 +56,75 @@ class Index extends Resource
 
         // set the connection information
         $this->elastic = $response;
-        
+
         return $this;
     }
 
+    /**
+     * Index a single record.
+     *
+     * @param   string
+     * @param   string
+     * @param   array
+     * @param   array
+     * @return  array
+     */
+    public function index($document, $type, $data, $options = array())
+    {
+        // build up the url
+        $url = $this->url . '/' . $document . '/' . $type;
+
+        // if document is not set
+        if(!isset($document)) {
+            return Exception::i('Document name is required.')->trigger();
+        }
+
+        // if type is not set
+        if(!isset($type)) {
+            return Exception::i('Document type is required.')->trigger();
+        }
+
+        // does data empty?
+        if(empty($data)) {
+            return Exception::i('Data is required.')->trigger();
+        }
+
+        // does index id set?
+        if(!isset($data['_id'])) {
+            return Exception::i('Index id is required.')->trigger();
+        }
+
+        // set that id unto our url
+        $url = $url . '/' . $data['_id'];
+
+        // unset the id from the data
+        unset($data['_id']);
+        
+        // do we have options?
+        if(!empty($options)) {
+            // set the options
+            $this->setOptions($options);
+        }
+
+        // set the document
+        $this->document = $document;
+
+        // set the type
+        $this->type = $type;
+
+        // set the url
+        $this->url = $url;
+
+        // let's send this up
+        return $this->request('PUT', $data, array(), array());
+    }
+
+    /**
+     * Debug purposes.
+     *
+     * @param   string
+     * @return  Eden\Core\Inspect
+     */
     public function debug($message)
     {
         return \Eden\Core\Inspect::i()->inspect($message);

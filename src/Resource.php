@@ -201,7 +201,10 @@ abstract class Resource extends Base
     public function setHeaders($headers)
     {
         // set headers
-        $this->headers = $headers;
+        foreach($headers as $key => $value) {
+            // set each headers
+            $this->headers[$key] = $value;
+        }
 
         return $this;
     }
@@ -259,7 +262,9 @@ abstract class Resource extends Base
     public function setOptions($options)
     {
         // set options
-        $this->options = $options;
+        foreach($options as $key => $value) {
+            $this->options[$key] = $value;    
+        }
 
         return $this;
     }
@@ -278,6 +283,112 @@ abstract class Resource extends Base
         $this->options[$key] = $value;
 
         return $this;
+    }
+
+    /**
+     * Basic request.
+     *
+     * @param   string
+     * @param   array
+     * @param   array
+     * @param   array
+     * @return  array
+     */
+    public function request($method, $data = array(), $query = array(), $headers = array())
+    {
+        // set the request url
+        $request = $this->resource;
+
+        // if data is set
+        if(!empty($data)) {
+            // let's set the request data
+            $this->setData($data);
+        }
+
+        // if request headers is set
+        if(!empty($headers)) {
+            // add everything on our headers
+            $this->setHeaders($headers);
+        }
+
+        // do we have extra headers?
+        if(!empty($this->headers)) {
+            // set the headers
+            foreach($headers as $key => $value) {
+                // set request headers
+                $request->setHeader($key, $value);
+            }
+        }
+
+        // if query is not empty
+        if(!empty($query)) {
+            // set options
+            $this->setOptions($query);
+        }
+
+        // build out the url
+        $url = $this->url;
+
+        // if options are set
+        if(!empty($this->options)) {
+            // set query options
+            $url = $url . '?' . http_build_query($this->options);
+        }
+
+        // let's set the url
+        $request->setUrl($url);
+
+        // if put request
+        if($method == 'PUT') {
+            // set as put request
+            $request->setCustomRequest('PUT')
+            // set content type
+            ->setHeaders('Content-Type', 'application/json')
+            // set post fields
+            ->setPostFields(json_encode($data));
+        } else if($method == 'POST') {
+            // set as post request
+            $request->setPost(true)
+            // set content type
+            ->setHeaders('Content-Type', 'application/json')
+            // set post fields
+            ->setPostFields(json_encode($data));
+        } else if($method == 'DELETE') {
+            // set custom request
+            $request->setCustomRequest('DELETE');
+        } else {
+            // set as http get
+            $request->setHttpGet(true);
+        }
+
+        try {
+            // let's follow redirects
+            $response = $request->setFollowLocation(true)
+            // set connection timeout
+            ->setConnectTimeout(60)
+            // set max redirects
+            ->setMaxRedirs(5)
+            // return repsonse instead of printing
+            ->setReturnTransfer(true)
+            // get the response
+            ->getJsonResponse();
+        } catch(\Exception $e) {
+            // throw an exception
+            return Exception::i('An error occured while sending request.')->trigger();
+        }
+
+        // do we have an error?
+        if(isset($response['error'])) {
+            // build out the message
+            $message = $response['error']['type'] . ': ' . 
+                       $response['error']['reason'] . ', status: ' . 
+                       $response['status'];
+
+            // throw it!
+            return Exception::i($message)->trigger(); 
+        }
+
+        return isset($response) || !empty($response) ? $response : array();
     }
 
     /**
