@@ -154,6 +154,9 @@ abstract class Resource extends Base
      */
     public function setHeaders($headers = array())
     {
+        // Argument test
+        Argument::i()->test(1, 'array');
+
         // if headers set is empty
         if(empty($headers)) {
             // set empty headers
@@ -180,6 +183,11 @@ abstract class Resource extends Base
      */
     public function addHeader($key, $value)
     {
+        // Argument test
+        Argument::i()
+            ->test(1, 'string')
+            ->test(2, 'scalar');
+
         // set header
         $this->header[$key] = $value;
 
@@ -194,6 +202,9 @@ abstract class Resource extends Base
      */
     public function setQuery($query = array())
     {
+        // Argument test
+        Argument::i()->test(1, 'array');
+
         // if query is empty
         if(empty($query)) {
             // set empty query
@@ -218,6 +229,11 @@ abstract class Resource extends Base
      */
     public function addQuery($key, $value)
     {
+        // Argument test
+        Argument::i()
+            ->test(1, 'string')
+            ->test(2, 'scalar');
+
         // add custom query
         $this->query[$key] = $value;
 
@@ -272,7 +288,15 @@ abstract class Resource extends Base
         $request = $this->resource;
 
         // set endpoint
-        $url = $this->host . '/' . $endpoint;
+        $url = $this->host;
+
+        // is index set?
+        if(isset($this->index)) {
+            $url = $url . '/' . $this->index;
+        }
+
+        // set endpoint
+        $url = $url . '/' . $endpoint;
 
         // set query
         if(!empty($query)) {
@@ -373,5 +397,15 @@ abstract class Resource extends Base
         }
 
         return isset($response) || !empty($response) ? $response : array();
+    }
+
+    /**
+     * Returns properties of this class.
+     *
+     * @return array
+     */
+    public function getResource()
+    {
+        return get_object_vars($this);
     }
 }

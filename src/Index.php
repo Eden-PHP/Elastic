@@ -47,9 +47,26 @@ class Index extends Resource
         // set connected flag
         $this->connected    = true;
 
-        echo '<pre>';
-        print_r($this);
-
         return $this;
+    }
+
+    /**
+     * Returns elastic Document API.
+     *
+     * @param   array
+     * @return  Eden\Elastic\Document
+     */
+    public function document($data = array())
+    {
+        // initialize document
+        $document = Document::i($this);
+
+        // data set?
+        if(!empty($data)) {
+            // set data
+            $document->setData($data);
+        }
+
+        return $document;
     }
 }
