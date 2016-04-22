@@ -271,7 +271,7 @@ class Document extends Base
         }
 
         // let's formulate the endpoint
-        $endpoint = '/' . $this->type . '/' . $this->data['_id'];
+        $endpoint = $this->type . '/' . $this->data['_id'];
 
         // unset the id
         unset($this->data['_id']);
@@ -288,6 +288,154 @@ class Document extends Base
             $response = $this->connection
             ->request(Index::PUT, $endpoint, $this->data, $this->options);
         } catch(\Exception $e) {
+            // throw an exception
+            return Exception::i($e->getMessage())->trigger();
+        }
+
+        return $response;
+    }
+
+    /**
+     * Get a single document.
+     *
+     * @param   int | string
+     * @param   string | null
+     * @param   bool | array
+     * @param   array
+     * @return  array
+     */
+    public function get($id, $type = null, $test = false, $options = array())
+    {
+        // Argument test
+        Argument::i()
+            ->test(1, 'int', 'string')
+            ->test(2, 'string', 'null')
+            ->test(3, 'bool', 'array')
+            ->test(4, 'array');
+
+        // if id is not set
+        if(!isset($id)) {
+            // throw an exception
+            return Exception::i(self::ID_NOT_SET)->trigger();
+        }
+
+        // if index type is not set
+        if(!isset($this->type) && !isset($type)) {
+            // throw exception
+            return Exception::i(self::INDEX_TYPE_NOT_SET)->trigger();
+        }
+
+        // if type arg is set
+        if(isset($type)) {
+            // set document index type
+            $this->setType($type);
+        }
+
+        // check arguments
+        if(is_array($test)) {
+            // set options
+            $options = $test;
+            // set test
+            $test    = false;
+        }
+
+        // if options is not empty
+        if(!empty($options)) {
+            // set options
+            $this->setOptions($options);
+        }
+
+        // let's formulate the endpoint
+        $endpoint = $this->type . '/' . $id;
+
+        // do we have tail endpoint?
+        if(isset($this->endpoint)) {
+            // set tail endpoint
+            $endpoint = $endpoint . '/' . $this->endpoint;
+        }
+
+        // try request
+        try {
+            // set method
+            $method = Index::GET;
+
+            // are we going to test?
+            if($test) {
+                // set method
+                $method = Index::HEAD;
+            }
+
+            $response = $this->connection
+            // set query
+            ->setQuery($this->options)
+            // send up request
+            ->request($method, $endpoint);
+        } catch(\Exception $e) {
+            // throw exceptiion
+            return Exception::i($e->getMessage())->trigger();
+        }
+
+        return $response;
+    }
+
+    /**
+     * Deletes a single record.
+     *
+     * @param   int | string
+     * @param   string | null
+     * @param   array
+     * @return  array
+     */
+    public function delete($id, $type = null, $options = array())
+    {
+        // Argument test
+        Argument::i()
+            ->test(1, 'int', 'string')
+            ->test(2, 'string', 'null')
+            ->test(3, 'array');
+
+        // if id is not set
+        if(!isset($id)) {
+            // throw an exception
+            return Exception::i(self::ID_NOT_SET)->trigger();
+        }
+
+        // if index type is not set
+        if(!isset($this->type) && !isset($type)) {
+            // throw exception
+            return Exception::i(self::INDEX_TYPE_NOT_SET)->trigger();
+        }
+
+        // if type arg is set
+        if(isset($type)) {
+            // set document index type
+            $this->setType($type);
+        }
+
+        // if options is not empty
+        if(!empty($options)) {
+            // set options
+            $this->setOptions($options);
+        }
+
+        // let's formulate the endpoint
+        $endpoint = $this->type . '/' . $id;
+
+        // do we have tail endpoint?
+        if(isset($this->endpoint)) {
+            // set tail endpoint
+            $endpoint = $endpoint . '/' . $this->endpoint;
+        }
+
+        // try request
+        try {
+            $response = $this->connection
+            // set query
+            ->setQuery($this->options)
+            // send up request
+            ->request(Index::DELETE, $endpoint);
+        } catch(\Exception $e) {
+            // throw exceptiion
             return Exception::i($e->getMessage())->trigger();
         }
 

@@ -48,6 +48,20 @@ abstract class Resource extends Base
     const DELETE = 'DELETE';
 
     /**
+     * HEAD Method.
+     *
+     * @const string
+     */
+    const HEAD = 'HEAD';
+
+    /**
+     * OPTIONS Method.
+     *
+     * @const string
+     */
+    const OPTIONS = 'OPTIONS';
+
+    /**
      * Error sending request.
      *
      * @const string

@@ -39,7 +39,7 @@ class Index extends Resource
             $response = $this->request(self::GET, '');
         } catch(\Exception $e) {
             // throw an exception
-            return Exception::i(self::UNABLE_TO_CONNECT)->trigger();
+            return Exception::i(sprintf(self::UNABLE_TO_CONNECT, $this->host))->trigger();
         }
 
         // set connection information
