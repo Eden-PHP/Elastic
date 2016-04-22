@@ -20,6 +20,13 @@ namespace Eden\Elastic;
 abstract class Resource extends Base
 {
     /**
+     * Failed request error.
+     *
+     * @const string
+     */
+    const FAILED_REQUEST = 'An error occured while sending request.';
+
+    /**
      * Elastic api host.
      *
      * @var string
@@ -345,14 +352,14 @@ abstract class Resource extends Base
             // set content type
             ->setHeaders('Content-Type', 'application/json')
             // set post fields
-            ->setPostFields(json_encode($data));
+            ->setPostFields(json_encode($this->data));
         } else if($method == 'POST') {
             // set as post request
             $request->setPost(true)
             // set content type
             ->setHeaders('Content-Type', 'application/json')
             // set post fields
-            ->setPostFields(json_encode($data));
+            ->setPostFields(json_encode($this->data));
         } else if($method == 'DELETE') {
             // set custom request
             $request->setCustomRequest('DELETE');
@@ -374,7 +381,7 @@ abstract class Resource extends Base
             ->getJsonResponse();
         } catch(\Exception $e) {
             // throw an exception
-            return Exception::i('An error occured while sending request.')->trigger();
+            return Exception::i(self::FAILED_REQUEST)->trigger();
         }
 
         // do we have an error?

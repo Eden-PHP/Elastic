@@ -20,11 +20,39 @@ namespace Eden\Elastic;
 class Index extends Resource
 {
     /**
+     * Document name required error.
+     *
+     * @const string
+     */
+    const DOCUMENT_NAME_REQUIRED = 'Document name is required.';
+
+    /**
+     * Document type required error.
+     *
+     * @const string
+     */
+    const DOCUMENT_TYPE_REQUIRED = 'Document type is required.';
+
+    /**
+     * Document data required error.
+     *
+     * @const string
+     */
+    const DOCUMENT_DATA_REQUIRED = 'Document data is required.';
+
+    /**
      * Unable to connect error.
      *
      * @const string
      */
     const UNABLE_TO_CONNECT = 'Unable to connect to host: %s';
+
+    /**
+     * Index id required error.
+     *
+     * @const string
+     */
+    const INDEX_ID_REQUIRED = 'Document index id is required.';
 
     /**
      * Connect to elastic api.
@@ -76,22 +104,22 @@ class Index extends Resource
 
         // if document is not set
         if(!isset($document)) {
-            return Exception::i('Document name is required.')->trigger();
+            return Exception::i(self::DOCUMENT_NAME_REQUIRED)->trigger();
         }
 
         // if type is not set
         if(!isset($type)) {
-            return Exception::i('Document type is required.')->trigger();
+            return Exception::i(self::DOCUMENT_TYPE_REQUIRED)->trigger();
         }
 
         // does data empty?
         if(empty($data)) {
-            return Exception::i('Data is required.')->trigger();
+            return Exception::i(self::DOCUMENT_DATA_REQUIRED)->trigger();
         }
 
         // does index id set?
         if(!isset($data['_id'])) {
-            return Exception::i('Index id is required.')->trigger();
+            return Exception::i(self::INDEX_ID_REQUIRED)->trigger();
         }
 
         // set that id unto our url
