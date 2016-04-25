@@ -59,7 +59,7 @@ class Document extends Base
      *
      * @var array
      */
-    protected $data = null;
+    protected $data = array();
 
     /**
      * Document index
@@ -436,6 +436,159 @@ class Document extends Base
             ->request(Index::DELETE, $endpoint);
         } catch(\Exception $e) {
             // throw exceptiion
+            return Exception::i($e->getMessage())->trigger();
+        }
+
+        return $response;
+    }
+
+    /**
+     * Updates a record based on document
+     * id and the given document data.
+     *
+     * @param   string | null
+     * @param   array
+     * @return  array
+     */
+    public function update($type = null, $options = array())
+    {
+        // Argument test
+        Argument::i()
+            ->test(1, 'string', 'null')
+            ->test(2, 'array');
+
+        // get connection information
+        $elastic = $this->connection->getResource();
+
+        // if index is not set
+        if(empty($elastic['index'])) {
+            // throw exception
+            return Exception::i(self::INDEX_NOT_SET)->trigger();
+        }
+
+        // if index type is not set
+        if(!isset($this->type) && !isset($type)) {
+            // throw exception
+            return Exception::i(self::INDEX_TYPE_NOT_SET)->trigger();
+        }
+
+        // is data set?
+        if(empty($this->data)) {
+            // throw exception
+            return Exception::i(self::DATA_NOT_SET)->trigger();
+        }
+
+        // is id set?
+        if(!isset($this->data['_id'])) {
+            // throw exception
+            return Exception::i(self::ID_NOT_SET)->trigger();
+        }
+
+        // if type arg is set
+        if(isset($type)) {
+            // set document index type
+            $this->setType($type);
+        }
+
+        // if options is set
+        if(!empty($options)) {
+            // set document options
+            $this->setOptions($options);
+        }
+
+        // let's formulate the endpoint
+        $endpoint = $this->type . '/' . $this->data['_id'] . '/_update';
+
+        // unset the id
+        unset($this->data['_id']);
+
+        // do we have tail endpoint?
+        if(isset($this->endpoint)) {
+            // set tail endpoint
+            $endpoint = $endpoint . '/' . $this->endpoint;
+        }
+
+        // try request
+        try {
+            // send post request
+            $response = $this->connection
+            ->request(Index::POST, $endpoint, $this->data, $this->options);
+        } catch(\Exception $e) {
+            // throw an exception
+            return Exception::i($e->getMessage())->trigger();
+        }
+
+        return $response;
+    }
+
+    /**
+     * Note: This function is experimental,
+     * see: https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update-by-query.html
+     * for more information.
+     *
+     * Perform an update on every document
+     * in the index without changing the source.
+     *
+     * @param   string | null
+     * @param   array
+     * @return  array
+     */
+    public function updateByQuery($type = null, $options = array())
+    {
+        // Argument test
+        Argument::i()
+            ->test(1, 'string', 'null')
+            ->test(2, 'array');
+
+        // get connection information
+        $elastic = $this->connection->getResource();
+
+        // if no type is set but there are options
+        if(is_array($type)) {
+            // get options
+            $options = $type;
+            // set type to null
+            $type    = null;
+        }
+
+        // if index is not set
+        if(empty($elastic['index'])) {
+            // throw exception
+            return Exception::i(self::INDEX_NOT_SET)->trigger();
+        }
+
+        // if index type is set
+        if(isset($type)) {
+            // set type
+            $this->setType($type);
+        }
+
+        // if options is set
+        if(!empty($options)) {
+            // set document options
+            $this->setOptions($options);
+        }
+
+        // set endpoint
+        $endpoint = '_update_by_query';
+
+        // is type set?
+        if(isset($this->type)) {
+            $endpoint = $this->type . '/' . $endpoint; 
+        }
+
+        // is endpoint set?
+        if(isset($this->endpoint)) {
+            $endpoint = $endpoint . '/' . $this->endpoint;
+        }
+
+        // send request
+        try {
+            // send request
+            $response = $this->connection
+            ->request(Index::POST, $endpoint, $this->data, $this->options);
+        } catch(\Exception $e) {
+            // throw an exception
             return Exception::i($e->getMessage())->trigger();
         }
 

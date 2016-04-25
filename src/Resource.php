@@ -326,8 +326,17 @@ abstract class Resource extends Base
 
         // query set?
         if(!empty($this->query)) {
+            // query separator
+            $separator = '?';
+
+            // do we have ? already?
+            if(strpos($url, '?') !== FALSE) {
+                // set separator
+                $separator = '&';
+            }
+
             // set request query
-            $url = $url . '?' . http_build_query($this->query);
+            $url = $url . $separator . http_build_query($this->query);
         }
 
         // set the url
@@ -338,15 +347,20 @@ abstract class Resource extends Base
             // GET method?
             case self::GET:
                 // set http get
-                $request->setHttpGet(true);
+                $request->setCustomRequest(self::GET);
 
                 break;
             // POST method?
             case self::POST:
                 // set http post
-                $request->setPost(true)
-                // set post fields
-                ->setPostFields(json_encode($data));
+                $request->setCustomRequest(self::POST);
+                
+                // set post fields if not empty
+                if(!empty($data)) {
+                    // set post data on non-empty data
+                    // to avoid errors from request
+                    $request->setPostFields(json_encode($data));
+                }
 
                 // set headers
                 $this->addHeader('Content-Type', 'application/json');
@@ -355,9 +369,14 @@ abstract class Resource extends Base
             // PUT method?
             case self::PUT:
                 // set custom request
-                $request->setCustomRequest(self::PUT)
-                // set post fields
-                ->setPostFields(json_encode($data));
+                $request->setCustomRequest(self::PUT);
+
+                // set post fields if not empty
+                if(!empty($data)) {
+                    // set post data on non-empty data
+                    // to avoid errors from request
+                    $request->setPostFields(json_encode($data));
+                }
 
                 // set headers
                 $this->addHeader('Content-Type', 'application/json');
@@ -371,9 +390,15 @@ abstract class Resource extends Base
                 ->setHeaders('Content-Type', 'application/json');
                 
                 break;
+            // HEAD method?
+            case self::HEAD:
+                // set custom request
+                $request->setCustomRequest(self::HEAD);
+
+                break;
             default:
                 // set http get
-                $request->setHttpGet(true);
+                $request->setCustomRequest(self::GET);
 
                 break;
         }
@@ -397,6 +422,24 @@ abstract class Resource extends Base
         } catch(\Exception $e) {
             // throw an error
             return Exception::i(self::REQUEST_ERROR)->trigger();
+        }
+
+        // get request meta data
+        $meta = $request->getMeta();
+
+        // do we have request errors?
+        if($meta['info'] == 400 || $meta['info'] == 0) {
+            // get the message
+            $message = $meta['response'];
+
+            // empty message?
+            if(strlen($message) == 0) {
+                // get the error code
+                $message = $meta['error_code'];
+            }
+
+            // throw the error from request
+            return Exception::i($message)->trigger();
         }
 
         // do we have an error?

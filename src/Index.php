@@ -69,4 +69,19 @@ class Index extends Resource
 
         return $document;
     }
+
+    /**
+     * Debugging purposes.
+     *
+     * @param   *mixed
+     * @return  Eden\Elastic\Index
+     */
+    public static function debug($message = '')
+    {
+        $message = '<pre>' . $message;
+
+        print PHP_EOL;
+        print $message;
+        print PHP_EOL;
+    }
 }
