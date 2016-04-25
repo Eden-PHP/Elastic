@@ -146,13 +146,13 @@ abstract class Resource extends Base
     /**
      * Set elastic api index.
      *
-     * @param   string
+     * @param   string | null
      * @return  Eden\Elastic\Resource
      */
     public function setIndex($index)
     {
         // Argument test
-        Argument::i()->test(1, 'string');
+        Argument::i()->test(1, 'string', 'null');
 
         // set elastic api index
         $this->index = $index;
@@ -305,7 +305,7 @@ abstract class Resource extends Base
         $url = $this->host;
 
         // is index set?
-        if(isset($this->index)) {
+        if(isset($this->index) && strlen($this->index) !== false) {
             $url = $url . '/' . $this->index;
         }
 
@@ -330,7 +330,7 @@ abstract class Resource extends Base
             $separator = '?';
 
             // do we have ? already?
-            if(strpos($url, '?') !== FALSE) {
+            if(strpos($url, '?') !== false) {
                 // set separator
                 $separator = '&';
             }
@@ -341,6 +341,8 @@ abstract class Resource extends Base
 
         // set the url
         $request->setUrl($url);
+
+        echo 'Request URL: ' . $url . PHP_EOL . PHP_EOL;
 
         // check the method
         switch ($method) {

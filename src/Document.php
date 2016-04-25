@@ -594,4 +594,105 @@ class Document extends Base
 
         return $response;
     }
+
+    /**
+     * Multi GET API allows to get multiple 
+     * documents based on an index, type (optional) 
+     * and id (and possibly routing).
+     *
+     * @param   string | null | array
+     * @param   string | null | array
+     * @param   array
+     * @return  array
+     */
+    public function multiGet($index = null, $type = null, $options = array())
+    {
+        // Argument test
+        Argument::i()
+            ->test(1, 'string', 'null', 'array')
+            ->test(2, 'string', 'null', 'array')
+            ->test(3, 'array');
+
+        // is data set?
+        if(empty($this->data)) {
+            // throw exception
+            return Exception::i(self::DATA_NOT_SET)->trigger();
+        }
+
+        // Possible endpoints:
+        // - [index]/[type]/_mget?[options]
+        // - [index]/_mget?[options]
+        // - _mget?[options]
+
+        // get total args
+        $args = func_num_args();
+
+        // do we have 2 arguments?
+        if($args == 2) {
+            // set options
+            $options = $type;
+            // type is null
+            $type    = null;
+        }
+
+        // options only?
+        if($args == 1 && is_array($index)) {
+            // set options
+            $options = $index;
+            // index is null
+            $index   = null;
+            // type is null
+            $type    = null;
+        }
+
+        // if index type is set
+        if(isset($type)) {
+            // set type
+            $this->setType($type);
+        }
+
+        // if options is set
+        if(!empty($options)) {
+            // set document options
+            $this->setOptions($options);
+        }
+
+        // set default endpoint
+        $endpoint = '_mget';
+
+        // if index and type is set
+        if(isset($index) && isset($type)) {
+            // set index 
+            $this->connection->setIndex($index);
+            // set type
+            $this->setType($type);
+        
+            // set endpoint
+            $endpoint = $this->type . '/_mget';
+        }
+
+        // if index is set but type is not set
+        if(isset($index) && !isset($type)) {
+            // set index
+            $this->connection->setIndex($index);
+        }
+
+        // index and type not set?
+        if(!isset($index) && !isset($type)) {
+            // set blank index
+            $this->connection->setIndex(null);
+        }
+
+        // try request
+        try {
+            // send request
+            $response = $this->connection
+            ->request(Index::POST, $endpoint, $this->data, $this->options);
+        } catch(\Exception $e) {
+            // throw an exception
+            return Exception::i($e->getMessage())->trigger();
+        }
+
+        return $response;
+    }
 }
