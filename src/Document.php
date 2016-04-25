@@ -220,79 +220,12 @@ class Document extends Base
     /**
      * Index a document to elasitc.
      *
-     * @param   string | null
-     * @param   array
-     * @return  array
+     * @return  Eden\Elastic\Document\Index
      */
-    public function index($type = null, $options = array())
+    public function index()
     {
-        // Argument test
-        Argument::i()
-            ->test(1, 'string', 'null')
-            ->test(2, 'array');
-
-        // get connection information
-        $elastic = $this->connection->getResource();
-
-        // if index is not set
-        if(empty($elastic['index'])) {
-            // throw exception
-            return Exception::i(self::INDEX_NOT_SET)->trigger();
-        }
-
-        // if index type is not set
-        if(!isset($this->type) && !isset($type)) {
-            // throw exception
-            return Exception::i(self::INDEX_TYPE_NOT_SET)->trigger();
-        }
-
-        // is data set?
-        if(empty($this->data)) {
-            // throw exception
-            return Exception::i(self::DATA_NOT_SET)->trigger();
-        }
-
-        // is id set?
-        if(!isset($this->data['_id'])) {
-            // throw exception
-            return Exception::i(self::ID_NOT_SET)->trigger();
-        }
-
-        // if type arg is set
-        if(isset($type)) {
-            // set document index type
-            $this->setType($type);
-        }
-
-        // if options is set
-        if(!empty($options)) {
-            // set document options
-            $this->setOptions($options);
-        }
-
-        // let's formulate the endpoint
-        $endpoint = $this->type . '/' . $this->data['_id'];
-
-        // unset the id
-        unset($this->data['_id']);
-
-        // do we have tail endpoint?
-        if(isset($this->endpoint)) {
-            // set tail endpoint
-            $endpoint = $endpoint . '/' . $this->endpoint;
-        }
-
-        // try request
-        try {
-            // send put request
-            $response = $this->connection
-            ->request(Index::PUT, $endpoint, $this->data, $this->options);
-        } catch(\Exception $e) {
-            // throw an exception
-            return Exception::i($e->getMessage())->trigger();
-        }
-
-        return $response;
+        // return document index class
+        return Document\Index::i($this->connection);
     }
 
     /**
@@ -446,79 +379,12 @@ class Document extends Base
      * Updates a record based on document
      * id and the given document data.
      *
-     * @param   string | null
-     * @param   array
-     * @return  array
+     * @return  Eden\Elastic\Document\Update
      */
     public function update($type = null, $options = array())
     {
-        // Argument test
-        Argument::i()
-            ->test(1, 'string', 'null')
-            ->test(2, 'array');
-
-        // get connection information
-        $elastic = $this->connection->getResource();
-
-        // if index is not set
-        if(empty($elastic['index'])) {
-            // throw exception
-            return Exception::i(self::INDEX_NOT_SET)->trigger();
-        }
-
-        // if index type is not set
-        if(!isset($this->type) && !isset($type)) {
-            // throw exception
-            return Exception::i(self::INDEX_TYPE_NOT_SET)->trigger();
-        }
-
-        // is data set?
-        if(empty($this->data)) {
-            // throw exception
-            return Exception::i(self::DATA_NOT_SET)->trigger();
-        }
-
-        // is id set?
-        if(!isset($this->data['_id'])) {
-            // throw exception
-            return Exception::i(self::ID_NOT_SET)->trigger();
-        }
-
-        // if type arg is set
-        if(isset($type)) {
-            // set document index type
-            $this->setType($type);
-        }
-
-        // if options is set
-        if(!empty($options)) {
-            // set document options
-            $this->setOptions($options);
-        }
-
-        // let's formulate the endpoint
-        $endpoint = $this->type . '/' . $this->data['_id'] . '/_update';
-
-        // unset the id
-        unset($this->data['_id']);
-
-        // do we have tail endpoint?
-        if(isset($this->endpoint)) {
-            // set tail endpoint
-            $endpoint = $endpoint . '/' . $this->endpoint;
-        }
-
-        // try request
-        try {
-            // send post request
-            $response = $this->connection
-            ->request(Index::POST, $endpoint, $this->data, $this->options);
-        } catch(\Exception $e) {
-            // throw an exception
-            return Exception::i($e->getMessage())->trigger();
-        }
-
-        return $response;
+        // return document update class
+        return Document\Update::i($this->connection);
     }
 
     /**
