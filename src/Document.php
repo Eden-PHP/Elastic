@@ -628,7 +628,7 @@ class Document extends Base
         $args = func_num_args();
 
         // do we have 2 arguments?
-        if($args == 2) {
+        if($args == 2 && is_array($type)) {
             // set options
             $options = $type;
             // type is null
@@ -686,6 +686,130 @@ class Document extends Base
         // try request
         try {
             // send request
+            $response = $this->connection
+            ->request(Index::POST, $endpoint, $this->data, $this->options);
+        } catch(\Exception $e) {
+            // throw an exception
+            return Exception::i($e->getMessage())->trigger();
+        }
+
+        return $response;
+    }
+
+    /**
+     * The bulk API makes it possible to perform 
+     * many index/delete operations in a single 
+     * API call. This can greatly increase the 
+     * indexing speed.
+     *
+     * @param   string | null | array
+     * @param   string | null | array
+     * @param   array
+     * @return  array
+     */
+    public function bulk($index = null, $type = null, $options = array())
+    {
+        // Argument test
+        Argument::i()
+            ->test(1, 'string', 'null', 'array')
+            ->test(2, 'string', 'null', 'array')
+            ->test(3, 'array');
+
+        // is data set?
+        if(empty($this->data)) {
+            // throw exception
+            return Exception::i(self::DATA_NOT_SET)->trigger();
+        }
+
+        // Possible endpoints:
+        // - [index]/[type]/_bulk?[options]
+        // - [index]/_bulk?[options]
+        // - _bulk?[options]
+
+        // get total args
+        $args = func_num_args();
+
+        // do we have 2 arguments?
+        if($args == 2 && is_array($type)) {
+            // set options
+            $options = $type;
+            // type is null
+            $type    = null;
+        }
+
+        // options only?
+        if($args == 1 && is_array($index)) {
+            // set options
+            $options = $index;
+            // index is null
+            $index   = null;
+            // type is null
+            $type    = null;
+        }
+
+        // if index type is set
+        if(isset($type)) {
+            // set type
+            $this->setType($type);
+        }
+
+        // if options is set
+        if(!empty($options)) {
+            // set document options
+            $this->setOptions($options);
+        }
+
+        // set default endpoint
+        $endpoint = '_bulk';
+
+        // if index and type is set
+        if(isset($index) && isset($type)) {
+            // set index 
+            $this->connection->setIndex($index);
+            // set type
+            $this->setType($type);
+        
+            // set endpoint
+            $endpoint = $this->type . '/_bulk';
+        }
+
+        // if index is set but type is not set
+        if(isset($index) && !isset($type)) {
+            // set index
+            $this->connection->setIndex($index);
+        }
+
+        // index and type not set?
+        if(!isset($index) && !isset($type)) {
+            // set blank index
+            $this->connection->setIndex(null);
+        }
+
+        // we need the request to transfer in binary format
+        $this->connection->getRequest()->setBinaryTransfer(true);
+
+        // PROPER DATA FORMAT:
+        // action_and_meta_data\n
+        // optional_source\n
+        // action_and_meta_data\n
+        // optional_source\n
+        // ....
+        // action_and_meta_data\n
+        // optional_source\n
+        $data = '';
+
+        // now let's process each data
+        foreach($this->data as $value) {
+            // let's encode each set of data
+            $data = $data . json_encode($value) . "\n";
+        }
+
+        // now set the data again
+        $this->data = $data;
+
+        // try request
+        try {
+            // send request up
             $response = $this->connection
             ->request(Index::POST, $endpoint, $this->data, $this->options);
         } catch(\Exception $e) {

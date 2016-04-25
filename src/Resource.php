@@ -278,7 +278,7 @@ abstract class Resource extends Base
      *
      * @param   string
      * @param   string
-     * @param   array
+     * @param   array | string
      * @param   array
      * @param   array
      * @return  array
@@ -294,7 +294,7 @@ abstract class Resource extends Base
         Argument::i()
             ->test(1, 'string')
             ->test(2, 'string')
-            ->test(3, 'array')
+            ->test(3, 'array', 'string')
             ->test(4, 'array')
             ->test(5, 'array');
 
@@ -359,9 +359,12 @@ abstract class Resource extends Base
                 
                 // set post fields if not empty
                 if(!empty($data)) {
+                    // check if it's already a string
+                    $data = is_string($data) ? $data : json_encode($data);
+
                     // set post data on non-empty data
                     // to avoid errors from request
-                    $request->setPostFields(json_encode($data));
+                    $request->setPostFields($data);
                 }
 
                 // set headers
@@ -375,9 +378,12 @@ abstract class Resource extends Base
 
                 // set post fields if not empty
                 if(!empty($data)) {
+                    // check if it's already a string
+                    $data = is_string($data) ? $data : json_encode($data);
+
                     // set post data on non-empty data
                     // to avoid errors from request
-                    $request->setPostFields(json_encode($data));
+                    $request->setPostFields($data);
                 }
 
                 // set headers
@@ -457,6 +463,18 @@ abstract class Resource extends Base
 
         return isset($response) || !empty($response) ? $response : array();
     }
+
+    /**
+     * Returns the cURL object.
+     *
+     * @return  Eden\Curl\Index
+     */
+    public function getRequest()
+    {
+        // return the resource
+        return $this->resource;
+    }
+
 
     /**
      * Returns properties of this class.
