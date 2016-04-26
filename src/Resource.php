@@ -194,9 +194,6 @@ abstract class Resource extends Base
 
         // set the connection resource
         $this->connection = \Eden\Curl\Index::i();
-
-        // test connection
-        $this->elastic = $this->setIndex('')->send();
     }
 
     /**
@@ -220,12 +217,14 @@ abstract class Resource extends Base
 
             // set required field
             $this->require[] = lcfirst($property);
+
+            return $this;
         }
 
         // get, set, add
         $property = lcfirst(substr($name, 3));
 
-        // if property does not exists
+        // check if property exists
         if(!property_exists($this, $property)) {
             return $this;
         }
@@ -251,8 +250,14 @@ abstract class Resource extends Base
                     return $this;
                 }
 
+                // get the data first
+                $data = $this->$property;
+
+                // add the key value
+                $data[$key] = $val;
+
                 // set the property
-                $this->$property[$key] = $val;
+                $this->$property = $data;
             }
 
             return $this;
@@ -263,13 +268,6 @@ abstract class Resource extends Base
             return $this->$property;
         }
     }
-
-    /**
-     * Abstract connect method signature.
-     *
-     * @return  Eden\Elastic\Resource
-     */
-    abstract public function connect();
 
     /**
      * Returns current connection resource.
@@ -361,7 +359,7 @@ abstract class Resource extends Base
 
         // do we have tail endpoint?
         if(isset($this->endpoint)) {
-            $url = $url . '/' . $this->endpoint;
+            $url = rtrim($url, '/') . '/' . $this->endpoint;
         }
 
         // is query set?
@@ -411,7 +409,7 @@ abstract class Resource extends Base
                 // iterate on each body
                 foreach($this->body as $value) {
                     // encode body and add new line
-                    $body = json_encode($value) . "\n";
+                    $body = $body . json_encode($value) . "\n";
                 }
 
                 // set the body and set request as binary
@@ -423,7 +421,7 @@ abstract class Resource extends Base
             }
 
             // set custom header
-            $this->addHeader('Content-Type', 'application/json');
+            $this->addHeaders('Content-Type', 'application/json');
         }
 
         // let's set the headers

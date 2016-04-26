@@ -20,6 +20,13 @@ namespace Eden\Elastic;
 class Document extends Base
 {
     /**
+     * Bulk actions.
+     *
+     * @var array
+     */
+    protected $bulk = array();
+
+    /**
      * Default connection resource.
      *
      * @var Eden\Elastic\Index
@@ -54,7 +61,8 @@ class Document extends Base
 
         // from param to query
         if($property == 'param') {
-            $property = $query;
+            $property = 'query';
+            $name     = str_replace('Param', 'Query', $name);
         }
 
         // property exists on resource?
@@ -62,12 +70,6 @@ class Document extends Base
             // call the method
             $this->connection->__call($name, $args);
 
-            return $this;
-        }
-
-
-        // if property does not exists
-        if(!property_exists($this, $property)) {
             return $this;
         }
 
@@ -98,6 +100,25 @@ class Document extends Base
 
             return $this;
         }
+    }
+
+    /**
+     * Adds bulk action.
+     *
+     * @param   string
+     * @param   *mixed
+     * @return  array
+     */
+    public function addBulkAction($action, $payload)
+    {
+        // Argument test
+        Argument::i()
+            ->test(1, 'string')
+            ->test(2, 'string', 'int', 'array');
+
+        $this->bulk[] = array($action => $payload);
+
+        return $this;
     }
 
     /**
@@ -175,6 +196,230 @@ class Document extends Base
         ->requireId()
         // set the id
         ->setId($id)
+        // send request
+        ->send();
+    }
+
+    /**
+     * Delete's a document based on id.
+     *
+     * @param   scalar
+     * @param   string | null
+     * @return  array
+     */
+    public function delete($id, $type = null)
+    {
+        // Argument test
+        Argument::i()
+            ->test(1, 'scalar')
+            ->test(2, 'string', 'null');
+
+        // set request basics
+        $connection = $this->connection;
+
+        // is type set?
+        if(isset($type)) {
+            // set type
+            $connection->setType($type);
+        }
+
+        // set method to delete
+        $connection->setMethod(Index::DELETE);
+
+        return $connection
+        // require index
+        ->requireIndex()
+        // require type
+        ->requireType()
+        // require id
+        ->requireId()
+        // set the id
+        ->setId($id)
+        // send request
+        ->send();
+    }
+
+    /**
+     * Update's a document based
+     * on the given id and script.
+     *
+     * @param   scalar
+     * @param   string | null
+     * @return  array
+     */
+    public function update($id, $type = null)
+    {
+        // Argument test
+        Argument::i()
+            ->test(1, 'scalar')
+            ->test(2, 'string', 'null');
+
+        // set request basics
+        $connection = $this->connection;
+
+        // is type set?
+        if(isset($type)) {
+            // set type
+            $connection->setType($type);
+        }
+
+        // set method to delete
+        $connection->setMethod(Index::POST);
+
+        return $connection
+        // require index
+        ->requireIndex()
+        // require type
+        ->requireType()
+        // require id
+        ->requireId()
+        // require body
+        ->requireBody()
+        // set the id
+        ->setId($id)
+        // set endpoint
+        ->setEndpoint('_update')
+        // send request
+        ->send();
+    }
+
+    /**
+     * The simplest usage of _update_by_query 
+     * just performs an update on every document 
+     * in the index without changing the source.
+     *
+     * NOTE: This function is experimental as of
+     * https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update-by-query.html
+     *
+     * @param   string | null
+     * @return  array
+     */
+    public function updateByQuery($type = null)
+    {
+        // Argument test
+        Argument::i()->test(1, 'string', 'null');
+
+        // set request basics
+        $connection = $this->connection;
+
+        // is type set?
+        if(isset($type)) {
+            // set type
+            $connection->setType($type);
+        }
+
+        // set method to delete
+        $connection->setMethod(Index::POST);
+
+        return $connection
+        // set endpoint
+        ->setEndpoint('_update_by_query')
+        // send request
+        ->send();
+    }
+
+    /**
+     * Multi GET API allows to get 
+     * multiple documents based on 
+     * an index, type (optional) and 
+     * id (and possibly routing).
+     *
+     * @param   string | null
+     * @param   string | null
+     * @return  array
+     */
+    public function multiGet($index = null, $type = null)
+    {
+        // Argument test
+        Argument::i()
+            ->test(1, 'string', 'null')
+            ->test(2, 'string', 'null');
+
+        // set request basics
+        $connection = $this->connection;
+
+        // set index
+        if(isset($index)) {
+            $this->setIndex($index);
+        } else {
+            $this->setIndex('');
+        }
+
+        // set type
+        if(isset($type)) {
+            $this->setType($type);
+        }
+
+        // set request method
+        $connection->setMethod(Index::GET);
+
+        return $connection
+        // require body
+        ->requireBody()
+        // set endpoint
+        ->setEndpoint('_mget')
+        // send request
+        ->send();
+    }
+
+    /**
+     * The bulk API makes it possible 
+     * to perform many index/delete 
+     * operations in a single API call. 
+     * This can greatly increase the 
+     * indexing speed.
+     *
+     * @param   array | null
+     * @return  array
+     */
+    public function bulk($body = null)
+    {
+        // Argument test
+        Argument::i()->test(1, 'string', 'null');
+
+        // if body is set
+        if(isset($body)) {
+            // iterate on each body
+            foreach($body as $payload) {
+                $this->bulk[] = $payload;
+            }
+        }
+
+        return $this->connection
+        // require body
+        ->requireBody()
+        // set index to none
+        ->setIndex('')
+        // set body
+        ->setBody($this->bulk)
+        // set endpoint
+        ->setEndpoint('_bulk')
+        // set method to post
+        ->setMethod(Index::POST)
+        // set binary
+        ->setBinary(true)
+        // send request
+        ->send();
+    }
+
+    /**
+     * The most basic form of _reindex 
+     * just copies documents from one 
+     * index to another.
+     *
+     * @return array
+     */
+    public function reindex()
+    {
+        return $this->connection
+        // require body
+        ->requireBody()
+        // set index to non
+        ->setIndex('')
+        // set endpoint
+        ->setEndpoint('_reindex')
+        // set method
+        ->setMethod(Index::POST)
         // send request
         ->send();
     }
