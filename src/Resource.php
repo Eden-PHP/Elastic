@@ -20,46 +20,53 @@ namespace Eden\Elastic;
 abstract class Resource extends Base
 {
     /**
-     * GET Method.
+     * Get request.
      *
      * @const string
      */
     const GET = 'GET';
 
     /**
-     * POST Method.
+     * POST request.
      *
      * @const string
      */
     const POST = 'POST';
 
     /**
-     * PUT Method.
+     * PUT request.
      *
      * @const string
      */
     const PUT = 'PUT';
 
     /**
-     * DELETE Method.
+     * DELETE request.
      *
      * @const string
      */
     const DELETE = 'DELETE';
 
     /**
-     * HEAD Method.
+     * HEAD request.
      *
      * @const string
      */
     const HEAD = 'HEAD';
 
     /**
-     * OPTIONS Method.
+     * OPTIONS request.
      *
      * @const string
      */
     const OPTIONS = 'OPTIONS';
+
+    /**
+     * Required property error.
+     *
+     * @const string
+     */
+    const REQUIRED = 'Request %s is required.';
 
     /**
      * Error sending request.
@@ -69,54 +76,175 @@ abstract class Resource extends Base
     const REQUEST_ERROR = 'An error occured while sending request.';
 
     /**
-     * Elastic api host.
+     * API Host.
      *
      * @var string
      */
     protected $host = 'http://localhost:9200';
 
     /**
-     * Elastic api index.
+     * API Id.
      *
-     * @var string
+     * @var scalar | null
+     */
+    protected $id = null;
+
+    /**
+     * API Index.
+     *
+     * @var string | null
      */
     protected $index = null;
 
     /**
-     * Custom headers.
+     * API Type.
      *
-     * @var array
+     * @var string | null
      */
-    protected $headers = array();
+    protected $type = null;
 
     /**
-     * Custom request query.
+     * API Tail endpoint.
+     *
+     * @var string | null
+     */
+    protected $endpoint = null;
+
+    /**
+     * API Body.
+     *
+     * @var array | string | null
+     */
+    protected $body = null;
+
+    /**
+     * API Query.
      *
      * @var array
      */
     protected $query = array();
 
     /**
-     * Builds out connection information.
+     * Test request, flag
+     * for HEAD request.
      *
-     * @param   string
-     * @param   string
-     * @return  Eden\Elastic\Resource
+     * @var bool
      */
-    public function __construct($host = 'http://localhost:9200', $index = null)
+    protected $test = false;
+
+    /**
+     * Binary request flag.
+     *
+     * @var bool
+     */
+    protected $binary = false;
+
+    /**
+     * Request headers.
+     *
+     * @var array
+     */
+    protected $headers = array();
+
+    /**
+     * Required properties before
+     * sending the request.
+     *
+     * @var array
+     */
+    protected $require = array();
+
+    /**
+     * Initialize connection.
+     *
+     * @param   string | null
+     * @param   string | null
+     * @return  Resource
+     */
+    public function __construct($host = null, $index = null)
     {
         // Argument test
         Argument::i()
-            ->test(1, 'string')
+            ->test(1, 'string', 'null')
             ->test(2, 'string', 'null');
 
-        // set elastic api host
-        $this->host  = $host;
-        // set elastic api index
-        $this->index = $index;
+        // is host set?
+        if(isset($host)) {
+            $this->host = $host;
+        }
 
-        // initialize our resource
+        // is index set?
+        if(isset($index)) {
+            $this->index = $index;
+        }
+
+        // set the resource
         $this->resource = \Eden\Curl\Index::i();
+    }
+
+    /**
+     * Property setter and getter.
+     *
+     * @param   string
+     * @param   array
+     * @return  Resource
+     */
+    public function __call($name, $args)
+    {
+        // are we going to set required property?
+        if(strpos($name, 'require') === 0) {
+            // get the property
+            $property = str_replace('require', '', $name);
+
+            // property exists?
+            if(!property_exists($this, lcfirst($property))) {
+                return $this;
+            }
+
+            // set required field
+            $this->require[] = lcfirst($property);
+        }
+
+        // get, set, add
+        $property = lcfirst(substr($name, 3));
+
+        // if property does not exists
+        if(!property_exists($this, $property)) {
+            return $this;
+        }
+
+        // are we going to set?
+        if(strpos($name, 'set') === 0) {
+            $this->$property = isset($args[0]) ? $args[0] : null;
+            
+            return $this;
+        }
+
+        // are we going to add something?
+        if(strpos($name, 'add') === 0) {
+            // does property exists and is an array?
+            if(is_array($this->$property)) {
+                // get the key
+                $key = isset($args[0]) ? $args[0] : null;
+                // get the value
+                $val = isset($args[1]) ? $args[1] : null;
+
+                // does the key set?
+                if(is_null($key)) {
+                    return $this;
+                }
+
+                // set the property
+                $this->$property[$key] = $val;
+            }
+
+            return $this;
+        }
+
+        // are we going to get?
+        if(strpos($name, 'get') === 0) {
+            return $this->$property;
+        }
     }
 
     /**
@@ -127,288 +255,106 @@ abstract class Resource extends Base
     abstract public function connect();
 
     /**
-     * Set elastic api host.
+     * Send the request.
      *
-     * @param   string
-     * @return  Eden\Elastic\Resource
-     */
-    public function setHost($host)
-    {
-        // Argument test
-        Argument::i()->test(1, 'string');
-    
-        // set elastic api host
-        $this->host = $host;
-
-        return $this;
-    }
-
-    /**
-     * Set elastic api index.
-     *
-     * @param   string | null
-     * @return  Eden\Elastic\Resource
-     */
-    public function setIndex($index)
-    {
-        // Argument test
-        Argument::i()->test(1, 'string', 'null');
-
-        // set elastic api index
-        $this->index = $index;
-
-        return $this;
-    }
-
-    /** 
-     * Set custom list of headers.
-     *
-     * @param   array
-     * @return  Eden\Elastic\Resource
-     */
-    public function setHeaders($headers = array())
-    {
-        // Argument test
-        Argument::i()->test(1, 'array');
-
-        // if headers set is empty
-        if(empty($headers)) {
-            // set empty headers
-            $this->headers = array();
-
-            return $this;
-        }
-
-        // iterate on each headers
-        foreach($headers as $key => $value) {
-            // set header
-            $this->headers[$key] = $value;
-        }
-
-        return $this;
-    }
-
-    /**
-     * Add custom header.
-     *
-     * @param   string
-     * @param   *midex
-     * @return  Eden\Elastic\Resource
-     */
-    public function addHeader($key, $value)
-    {
-        // Argument test
-        Argument::i()
-            ->test(1, 'string')
-            ->test(2, 'scalar');
-
-        // set header
-        $this->header[$key] = $value;
-
-        return $this;
-    }
-
-    /**
-     * Set custom request queries.
-     *
-     * @param   array
-     * @return  Eden\Elastic\Resource
-     */
-    public function setQuery($query = array())
-    {
-        // Argument test
-        Argument::i()->test(1, 'array');
-
-        // if query is empty
-        if(empty($query)) {
-            // set empty query
-            $this->query = array();
-        }
-
-        // iterate on each query
-        foreach($query as $key => $value) {
-            // set query
-            $this->query[$key] = $value;
-        }
-
-        return $this;
-    }
-
-    /**
-     * Add custom request query.
-     *
-     * @param   string
-     * @param   *mixed
-     * @return  Eden\Elastic\Resource
-     */
-    public function addQuery($key, $value)
-    {
-        // Argument test
-        Argument::i()
-            ->test(1, 'string')
-            ->test(2, 'scalar');
-
-        // add custom query
-        $this->query[$key] = $value;
-
-        return $this;
-    }
-
-    /**
-     * Sets basic authorization (TODO).
-     *
-     * @param   string
-     * @param   string
-     * @return  Eden\Elastic\Resource
-     */
-    public function setBasicAuthorization($username, $password) 
-    {
-        // Argument test
-        Argument::i()
-            ->test(1, 'string')
-            ->test(2, 'string');
-
-        // :TODO
-
-        return $this;
-    }
-
-    /**
-     * Basic request method.
-     *
-     * @param   string
-     * @param   string
-     * @param   array | string
-     * @param   array
-     * @param   array
      * @return  array
      */
-    public function request(
-        $method, 
-        $endpoint, 
-        $data = array(), 
-        $query = array(), 
-        $headers = array())
+    public function send()
     {
-        // Argument test
-        Argument::i()
-            ->test(1, 'string')
-            ->test(2, 'string')
-            ->test(3, 'array', 'string')
-            ->test(4, 'array')
-            ->test(5, 'array');
+        // first let's check all required fields.
+        foreach($this->require as $property) {
+            // are we requiring scalar?
+            if(!is_array($this->$property) 
+            && !is_null($this->$property)) {
+                continue;
+            }
+
+            // are we requiring array?
+            if(is_array($this->$property)
+            && !empty($this->$property)) {
+                continue;
+            }
+
+            return Exception::i(sprintf(self::REQUIRED, strtoupper($property)))->trigger();
+        }
 
         // initialize request
         $request = $this->resource;
 
-        // set endpoint
+        // set request url
         $url = $this->host;
 
         // is index set?
-        if(isset($this->index) && strlen($this->index) !== false) {
+        if(isset($this->index)) {
             $url = $url . '/' . $this->index;
         }
 
-        // set endpoint
-        $url = $url . '/' . $endpoint;
-
-        // set query
-        if(!empty($query)) {
-            // set query
-            $this->setQuery($query);
+        // is index type set?
+        if(isset($this->type)) {
+            $url = $url . '/' . $this->type;
         }
 
-        // set headers
-        if(!empty($headers)) {
-            // set headers
-            $this->setHeaders($headers);
+        // is id set?
+        if(isset($this->id)) {
+            $url = $url . '/' . $this->id;
         }
 
-        // query set?
+        // do we have tail endpoint?
+        if(isset($this->endpoint)) {
+            $url = $url . '/' . $this->endpoint;
+        }
+
+        // is query set?
         if(!empty($this->query)) {
             // query separator
             $separator = '?';
-
             // do we have ? already?
             if(strpos($url, '?') !== false) {
                 // set separator
                 $separator = '&';
             }
-
             // set request query
             $url = $url . $separator . http_build_query($this->query);
         }
 
-        // set the url
+        // set request url
         $request->setUrl($url);
 
-        echo 'Request URL: ' . $url . PHP_EOL . PHP_EOL;
+        echo 'Request URL  : ' . $url . PHP_EOL;
+        echo 'Request Data : ' . PHP_EOL;
+        print_r($this->body);
+        echo PHP_EOL . PHP_EOL;
+        exit;
 
-        // check the method
-        switch ($method) {
-            // GET method?
-            case self::GET:
-                // set http get
-                $request->setCustomRequest(self::GET);
+        // does request method set?
+        if(!isset($this->method)) {
+            // default to get method
+            $this->method = self::GET;
+        }
 
-                break;
-            // POST method?
-            case self::POST:
-                // set http post
-                $request->setCustomRequest(self::POST);
-                
-                // set post fields if not empty
-                if(!empty($data)) {
-                    // check if it's already a string
-                    $data = is_string($data) ? $data : json_encode($data);
+        // do we have data?
+        if(!empty($this->body)) {
+            // are we going to send this as binary request?
+            if($this->binary) {
+                // set string body
+                $body = '';
 
-                    // set post data on non-empty data
-                    // to avoid errors from request
-                    $request->setPostFields($data);
+                // iterate on each body
+                foreach($this->body as $value) {
+                    // encode body and add new line
+                    $body = json_encode($value) . "\n";
                 }
 
-                // set headers
-                $this->addHeader('Content-Type', 'application/json');
+                // set the body and set request as binary
+                $request->setPostFields($body)
+                ->setBinaryTransfer(true);
+            } else {
+                // set post fields
+                $this->setPostFields(json_encode($this->body));
+            }
 
-                break;
-            // PUT method?
-            case self::PUT:
-                // set custom request
-                $request->setCustomRequest(self::PUT);
-
-                // set post fields if not empty
-                if(!empty($data)) {
-                    // check if it's already a string
-                    $data = is_string($data) ? $data : json_encode($data);
-
-                    // set post data on non-empty data
-                    // to avoid errors from request
-                    $request->setPostFields($data);
-                }
-
-                // set headers
-                $this->addHeader('Content-Type', 'application/json');
-
-                break;
-            // DELETE method?
-            case self::DELETE:
-                // set custom request
-                $request->setCustomRequest(self::DELETE)
-                // set header
-                ->setHeaders('Content-Type', 'application/json');
-                
-                break;
-            // HEAD method?
-            case self::HEAD:
-                // set custom request
-                $request->setCustomRequest(self::HEAD);
-
-                break;
-            default:
-                // set http get
-                $request->setCustomRequest(self::GET);
-
-                break;
+            // set custom header
+            $this->addHeader('Content-Type', 'application/json');
         }
 
         // let's set the headers
@@ -431,58 +377,29 @@ abstract class Resource extends Base
             // throw an error
             return Exception::i(self::REQUEST_ERROR)->trigger();
         }
-
         // get request meta data
         $meta = $request->getMeta();
-
         // do we have request errors?
         if($meta['info'] == 400 || $meta['info'] == 0) {
             // get the message
             $message = $meta['response'];
-
             // empty message?
             if(strlen($message) == 0) {
                 // get the error code
                 $message = $meta['error_code'];
             }
-
             // throw the error from request
             return Exception::i($message)->trigger();
         }
-
         // do we have an error?
         if(isset($response['error'])) {
             // build out the message
             $message = $response['error']['type'] . ': ' . 
                        $response['error']['reason'] . ', status: ' . 
                        $response['status'];
-
             // throw it!
             return Exception::i($message)->trigger(); 
         }
-
         return isset($response) || !empty($response) ? $response : array();
-    }
-
-    /**
-     * Returns the cURL object.
-     *
-     * @return  Eden\Curl\Index
-     */
-    public function getRequest()
-    {
-        // return the resource
-        return $this->resource;
-    }
-
-
-    /**
-     * Returns properties of this class.
-     *
-     * @return array
-     */
-    public function getResource()
-    {
-        return get_object_vars($this);
     }
 }
