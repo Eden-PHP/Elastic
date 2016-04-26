@@ -64,7 +64,7 @@ class Index extends Resource
         // data set?
         if(!empty($data)) {
             // set data
-            $document->setData($data);
+            $document->setBody($data);
         }
 
         return $document;

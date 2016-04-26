@@ -140,6 +140,13 @@ abstract class Resource extends Base
     protected $binary = false;
 
     /**
+     * Request metod.
+     *
+     * @var string | null
+     */
+    protected $method = null;
+
+    /**
      * Request headers.
      *
      * @var array
@@ -153,6 +160,13 @@ abstract class Resource extends Base
      * @var array
      */
     protected $require = array();
+
+    /**
+     * Connection resource.
+     *
+     * @var Eden\Index\Curl
+     */
+    protected $connection = null;
 
     /**
      * Initialize connection.
@@ -178,8 +192,11 @@ abstract class Resource extends Base
             $this->index = $index;
         }
 
-        // set the resource
-        $this->resource = \Eden\Curl\Index::i();
+        // set the connection resource
+        $this->connection = \Eden\Curl\Index::i();
+
+        // test connection
+        $this->elastic = $this->setIndex('')->send();
     }
 
     /**
@@ -255,6 +272,24 @@ abstract class Resource extends Base
     abstract public function connect();
 
     /**
+     * Returns current connection resource.
+     *
+     * @return Eden\Curl\Index
+     */
+    public function getConnection() {
+        return $this->connection;
+    }
+
+    /**
+     * Returns the resource.
+     *
+     * @return array
+     */
+    public function getResource() {
+        return get_object_vars($this);
+    }
+
+    /**
      * Send the request.
      *
      * @return  array
@@ -275,11 +310,36 @@ abstract class Resource extends Base
                 continue;
             }
 
+            // throw an exception
             return Exception::i(sprintf(self::REQUIRED, strtoupper($property)))->trigger();
         }
 
+        // is id set in body?
+        if(isset($this->body['id'])) {
+            $this->id = $this->body['id'];
+
+            // unset id
+            unset($this->body['id']);
+        }
+
+        // is index set?
+        if(isset($this->body['index'])) {
+            $this->index = $this->body['index'];
+
+            // unset index
+            unset($this->body['index']);
+        }
+
+        // is type set?
+        if(isset($this->body['type'])) {
+            $this->type = $this->body['type'];
+
+            // unset type
+            unset($this->body['type']);
+        }
+
         // initialize request
-        $request = $this->resource;
+        $request = $this->connection;
 
         // set request url
         $url = $this->host;
@@ -320,17 +380,26 @@ abstract class Resource extends Base
         // set request url
         $request->setUrl($url);
 
-        echo 'Request URL  : ' . $url . PHP_EOL;
-        echo 'Request Data : ' . PHP_EOL;
+        echo 'Request URL     : ' . $url . PHP_EOL;
+        echo 'Request Method  : ' . $this->method . PHP_EOL;
+        echo 'Request Data    : ' . PHP_EOL;
         print_r($this->body);
         echo PHP_EOL . PHP_EOL;
-        exit;
 
         // does request method set?
         if(!isset($this->method)) {
             // default to get method
             $this->method = self::GET;
         }
+
+        // test request?
+        if($this->test) {
+            // set method to head
+            $this->method = self::HEAD;
+        }
+
+        // set custom request
+        $request->setCustomRequest($this->method);
 
         // do we have data?
         if(!empty($this->body)) {
@@ -350,7 +419,7 @@ abstract class Resource extends Base
                 ->setBinaryTransfer(true);
             } else {
                 // set post fields
-                $this->setPostFields(json_encode($this->body));
+                $request->setPostFields(json_encode($this->body));
             }
 
             // set custom header
@@ -377,8 +446,10 @@ abstract class Resource extends Base
             // throw an error
             return Exception::i(self::REQUEST_ERROR)->trigger();
         }
+
         // get request meta data
         $meta = $request->getMeta();
+
         // do we have request errors?
         if($meta['info'] == 400 || $meta['info'] == 0) {
             // get the message
@@ -391,15 +462,18 @@ abstract class Resource extends Base
             // throw the error from request
             return Exception::i($message)->trigger();
         }
+
         // do we have an error?
         if(isset($response['error'])) {
             // build out the message
             $message = $response['error']['type'] . ': ' . 
                        $response['error']['reason'] . ', status: ' . 
                        $response['status'];
+
             // throw it!
             return Exception::i($message)->trigger(); 
         }
+
         return isset($response) || !empty($response) ? $response : array();
     }
 }
