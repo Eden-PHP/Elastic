@@ -223,9 +223,6 @@ class Document extends Base
             $connection->setType($type);
         }
 
-        // set method to delete
-        $connection->setMethod(Index::DELETE);
-
         return $connection
         // require index
         ->requireIndex()
@@ -235,6 +232,8 @@ class Document extends Base
         ->requireId()
         // set the id
         ->setId($id)
+        // set request method
+        ->setMethod(Index::DELETE)
         // send request
         ->send();
     }
@@ -263,9 +262,6 @@ class Document extends Base
             $connection->setType($type);
         }
 
-        // set method to delete
-        $connection->setMethod(Index::POST);
-
         return $connection
         // require index
         ->requireIndex()
@@ -279,6 +275,8 @@ class Document extends Base
         ->setId($id)
         // set endpoint
         ->setEndpoint('_update')
+        // set request method
+        ->setMethod(Index::POST)
         // send request
         ->send();
     }
@@ -308,12 +306,11 @@ class Document extends Base
             $connection->setType($type);
         }
 
-        // set method to delete
-        $connection->setMethod(Index::POST);
-
         return $connection
         // set endpoint
         ->setEndpoint('_update_by_query')
+        // set request method
+        ->setMethod(Index::POST)
         // send request
         ->send();
     }
@@ -349,9 +346,6 @@ class Document extends Base
         if(isset($type)) {
             $this->setType($type);
         }
-
-        // set request method
-        $connection->setMethod(Index::GET);
 
         return $connection
         // require body
@@ -420,6 +414,75 @@ class Document extends Base
         ->setEndpoint('_reindex')
         // set method
         ->setMethod(Index::POST)
+        // send request
+        ->send();
+    }
+
+    /**
+     * Returns information and statistics 
+     * on terms in the fields of a particular 
+     * document.
+     *
+     * @param   scalar | null
+     * @param   string | null
+     * @return  array
+     */
+    public function termVectors($id = null, $type = null)
+    {
+        // Argument test
+        Argument::i()
+            ->test(1, 'scalar', 'null')
+            ->test(2, 'string', 'null');
+
+        // set request basics
+        $connection = $this->connection;
+
+        // is type set?
+        if(isset($type)) {
+            // set type
+            $connection->setType($type);
+        }
+
+        return $connection
+        // require index
+        ->requireIndex()
+        // require type
+        ->requireType()
+        // set id
+        ->setId($id)
+        // set endpoint
+        ->setEndpoint('_termvectors')
+        // send request
+        ->send();
+    }
+
+    /**
+     * Multi termvectors API allows 
+     * to get multiple termvectors at 
+     * once. The documents from which 
+     * to retrieve the term vectors are 
+     * specified by an index, type and id.
+     *
+     * @param   string | null
+     * @return  array
+     */
+    public function multiTermVectors($type = null)
+    {
+        // Argument test
+        Argument::i()->test(1, 'string', 'null');
+
+        // set request basics
+        $connection = $this->connection;
+
+        // is type set?
+        if(isset($type)) {
+            // set type
+            $connection->setType($type);
+        }
+
+        return $connection
+        // set endpoint
+        ->setEndpoint('_mtermvectors')
         // send request
         ->send();
     }
