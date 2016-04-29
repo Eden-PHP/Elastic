@@ -59,12 +59,6 @@ class Document extends Base
         // get, set, add
         $property = lcfirst(substr($name, 3));
 
-        // from param to query
-        if($property == 'param') {
-            $property = 'query';
-            $name     = str_replace('Param', 'Query', $name);
-        }
-
         // property exists on resource?
         if(property_exists($this->connection, $property)) {
             // call the method

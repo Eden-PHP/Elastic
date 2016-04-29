@@ -17,7 +17,7 @@ namespace Eden\Elastic;
  * @author   Charles Zamora <czamora@openovate.com>
  * @standard PSR-2
  */
-abstract class Resource extends Base
+class Resource extends Base
 {
     /**
      * Get request.
@@ -118,11 +118,11 @@ abstract class Resource extends Base
     protected $body = null;
 
     /**
-     * API Query.
+     * API Query Parameters.
      *
      * @var array
      */
-    protected $query = array();
+    protected $param = array();
 
     /**
      * Test request, flag
@@ -362,27 +362,21 @@ abstract class Resource extends Base
             $url = rtrim($url, '/') . '/' . $this->endpoint;
         }
 
-        // is query set?
-        if(!empty($this->query)) {
-            // query separator
+        // is query parameters set?
+        if(!empty($this->param)) {
+            // parameter separator
             $separator = '?';
             // do we have ? already?
             if(strpos($url, '?') !== false) {
                 // set separator
                 $separator = '&';
             }
-            // set request query
-            $url = $url . $separator . http_build_query($this->query);
+            // set request query parameters
+            $url = $url . $separator . http_build_query($this->param);
         }
 
         // set request url
         $request->setUrl($url);
-
-        echo 'Request URL     : ' . $url . PHP_EOL;
-        echo 'Request Method  : ' . $this->method . PHP_EOL;
-        echo 'Request Data    : ' . PHP_EOL;
-        print_r($this->body);
-        echo PHP_EOL . PHP_EOL;
 
         // does request method set?
         if(!isset($this->method)) {
@@ -429,6 +423,12 @@ abstract class Resource extends Base
             $request->setHeaders($key, $value);
         }
 
+        echo 'Request URL     : ' . $url . PHP_EOL;
+        echo 'Request Method  : ' . $this->method . PHP_EOL;
+        echo 'Request Data    : ' . PHP_EOL;
+        print_r($this->body);
+        echo PHP_EOL . PHP_EOL;
+
         try {
             // trigger request
             $response = $request->setFollowLocation(true)
@@ -472,6 +472,38 @@ abstract class Resource extends Base
             return Exception::i($message)->trigger(); 
         }
 
+        // reset properties
+        $this->reset();
+
         return isset($response) || !empty($response) ? $response : array();
+    }
+
+    /**
+     * Reset's default resource configuration.
+     *
+     * @return  Eden\Elastic\Resource
+     */
+    private function reset()
+    {
+        // reset id
+        $this->id       = null;
+        // reset type
+        $this->type     = null;
+        // reset request method
+        $this->method   = null;
+        // reset request body
+        $this->body     = null;
+        // reset query parameters
+        $this->param    = array();
+        // reset required properties
+        $this->require  = array();
+        // reset endpoint
+        $this->endpoint = null;
+        // reset binary flag
+        $this->binary   = false;
+        // reset headers
+        $this->headers  = array();
+
+        return $this;
     }
 }
