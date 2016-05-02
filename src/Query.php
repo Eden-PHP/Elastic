@@ -36,7 +36,7 @@ class Query extends Base
      * @param   *mixed
      * @return  $this
      */
-    public function set($key = null, $value = null)
+    public function setTree($key = null, $value = null)
     {
         // Argument test
         Argument::i()
@@ -99,9 +99,42 @@ class Query extends Base
      * @param   string | null
      * @return  $this
      */
-    public function get($key = null)
+    public function getTree($key = null)
     {
-        // TODO: ...
+        // Argument test
+        Argument::i()->test(1, 'string', 'null');
+
+        // if key is not set
+        if(is_null($key)) {
+            // return the entire query
+            return $this->query;
+        }
+
+        // replace dot's with >
+        $key = str_replace('.', '>', $key);
+        // replace all escaped keys
+        $key = preg_replace_callback('/(\[[^]]*?)(\>)([^]]*?\])/m', function($matches) { 
+            // replace back all the > to dots
+            return str_replace('>', '.', $matches[0]); 
+        }, $key);
+        // replace all [ ]
+        $key = str_replace(array('[', ']'), '', $key);
+
+        // explode keys
+        $keys = explode('>', $key);
+
+        // get the original set of query
+        $original  = $this->query;
+        // maximum depth
+        $max       = count($keys);
+
+        // if we only have 1 key
+        if($max == 1) {
+            // return the key
+            return isset($this->query[array_pop($keys)]) ? $this->query[array_pop($keys)] : null;
+        }
+
+        return $this->scan($this->query, $keys, 0, $max);
     }
 
     /**
@@ -147,5 +180,35 @@ class Query extends Base
         $this->recurse($target[$key], $value, $keys, ++$index, $max);
 
         return $target;
+    }
+
+    /**
+     * Scans the object tree recursively.
+     *
+     * @param   array
+     * @param   string
+     * @param   int
+     * @param   int
+     * @return  *mixed
+     */
+    public function scan($target, $keys, $start, $end)
+    {
+        // get current
+        $current = isset($target[$keys[$start]]) ? $target[$keys[$start]] : null;
+
+        // if not found
+        if(is_null($current)) {
+            return $current;
+        }
+
+        // are we on the end?
+        if(($end - 1) == $start) {
+            return $current;
+        }
+
+        // if it's an array
+        if(is_array($current)) {
+            return $this->scan($current, $keys, ++$start, $end);
+        }
     }
 }
