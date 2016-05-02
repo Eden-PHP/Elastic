@@ -60,6 +60,26 @@ class Index extends Resource
     }
 
     /**
+     * Returns elastic Search API.
+     *
+     * @param   array
+     * @return  Eden\Elastic\Search
+     */
+    public function search($data = array())
+    {
+        // initialize search
+        $search = Search::i($this);
+
+        // data set?
+        if(!empty($data)) {
+            // set data
+            $search->setBody($data);
+        }
+
+        return $search;
+    }
+
+    /**
      * Returns elastic query builder.
      *
      * @return  Eden\Elastic\Query
