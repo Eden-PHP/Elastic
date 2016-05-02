@@ -191,9 +191,6 @@ class Resource extends Base
         if(isset($index)) {
             $this->index = $index;
         }
-
-        // set the connection resource
-        $this->connection = \Eden\Curl\Index::i();
     }
 
     /**
@@ -270,30 +267,36 @@ class Resource extends Base
     }
 
     /**
-     * Returns current connection resource.
-     *
-     * @return Eden\Curl\Index
-     */
-    public function getConnection() {
-        return $this->connection;
-    }
-
-    /**
-     * Returns the resource.
-     *
-     * @return array
-     */
-    public function getResource() {
-        return get_object_vars($this);
-    }
-
-    /**
      * Send the request.
      *
      * @return  array
      */
     public function send()
     {
+        // is id set in body?
+        if(isset($this->body['_id'])) {
+            $this->id = $this->body['_id'];
+
+            // unset id
+            unset($this->body['_id']);
+        }
+
+        // is index set?
+        if(isset($this->body['_index'])) {
+            $this->index = $this->body['_index'];
+
+            // unset index
+            unset($this->body['_index']);
+        }
+
+        // is type set?
+        if(isset($this->body['_type'])) {
+            $this->type = $this->body['_type'];
+
+            // unset type
+            unset($this->body['_type']);
+        }
+
         // first let's check all required fields.
         foreach($this->require as $property) {
             // are we requiring scalar?
@@ -312,32 +315,8 @@ class Resource extends Base
             return Exception::i(sprintf(self::REQUIRED, strtoupper($property)))->trigger();
         }
 
-        // is id set in body?
-        if(isset($this->body['id'])) {
-            $this->id = $this->body['id'];
-
-            // unset id
-            unset($this->body['id']);
-        }
-
-        // is index set?
-        if(isset($this->body['index'])) {
-            $this->index = $this->body['index'];
-
-            // unset index
-            unset($this->body['index']);
-        }
-
-        // is type set?
-        if(isset($this->body['type'])) {
-            $this->type = $this->body['type'];
-
-            // unset type
-            unset($this->body['type']);
-        }
-
         // initialize request
-        $request = $this->connection;
+        $request = \Eden\Curl\Index::i();
 
         // set request url
         $url = $this->host;

@@ -20,6 +20,26 @@ namespace Eden\Elastic;
 class Index extends Resource
 {
     /**
+     * Returns elastic Bulk API.
+     *
+     * @param   array
+     * @return  Eden\Elastic\Bulk
+     */
+    public function bulk($data = array())
+    {
+        // initialize bulk
+        $bulk = Bulk::i($this);
+
+        // data set?
+        if(!empty($data)) {
+            // set data
+            $bulk->setBody($data);
+        }
+
+        return $bulk;
+    }
+
+    /**
      * Returns elastic Document API.
      *
      * @param   array
@@ -40,37 +60,337 @@ class Index extends Resource
     }
 
     /**
-     * Returns elastic Search API.
+     * Returns elastic query builder.
      *
-     * @param   array
-     * @return  Eden\Elastic\Search
+     * @return  Eden\Elastic\Query
      */
-    public function search($data = array())
+    public function query()
     {
-        // initialize search
-        $search = Search::i($this);
-
-        // data set?
-        if(!empty($data)) {
-            // set data
-            $search->setBody($data);
-        }
-
-        return $search;
+        return Query::i();
     }
 
     /**
-     * Debugging purposes.
+     * Create or index a single document.
      *
-     * @param   *mixed
-     * @return  Eden\Elastic\Index
+     * @param   string | null
+     * @param   array
+     * @param   bool
+     * @return  array
      */
-    public static function debug($message = '')
+    public function createRow($type = null, $data = array(), $auto = false)
     {
-        $message = '<pre>' . $message;
+        // Argument test
+        Argument::i()
+            ->test(1, 'string', 'null')
+            ->test(2, 'array')
+            ->test(3, 'bool');
 
-        print PHP_EOL;
-        print $message;
-        print PHP_EOL;
+        // get the connection
+        $connection = $this;
+
+        // if type is set
+        if(isset($type)) {
+            // set type
+            $connection->setType($type);
+        }
+
+        // if data is set
+        if(!empty($data)) {
+            // set data
+            $connection->setBody($data);
+        }
+
+        // auto create id?
+        if($auto) {
+            $connection->setMethod(Index::POST);
+        } else {
+            $connection->setMethod(Index::PUT);
+        }
+
+        return $connection
+        // require index
+        ->requireIndex()
+        // require type
+        ->requireType()
+        // require id
+        ->requireId()
+        // require body
+        ->requireBody()
+        // send request
+        ->send();
+    }
+
+    /**
+     * Create multiple documents.
+     *
+     * @param   string | null
+     * @param   array
+     * @return  array
+     */
+    public function createRows($type = null, $data = array())
+    {
+        // Argument test
+        Argument::i()
+            ->test(1, 'string', 'null')
+            ->test(2, 'array');
+
+        // get the connection
+        $connection = $this;
+
+        // if type is set
+        if(isset($type)) {
+            // set type
+            $connection->setType($type);
+        }
+
+        // if data is set
+        if(!empty($data)) {
+            // set data
+            $connection->setBody($data);
+        }
+
+        // initialize bulk
+        $bulk = Bulk::i($connection);
+        // get request body
+        $body = $connection->getBody();
+
+        // clear request body
+        $connection->setBody(null);
+
+        // iterate on each body
+        foreach($body as $index) {
+            // get the bulk action
+            $action = array();
+            // get the bulk data
+            $data   = array();
+
+            // iterate on each data
+            foreach($index as $key => $value) {
+                // if key starts with underscore
+                if(strpos($key, '_') === 0) {
+                    $action[$key] = $value;
+                } else {
+                    $data[$key] = $value;
+                }
+            }
+
+            // add bulk
+            $bulk->addBulk('index', $action);
+            // add bulk
+            $bulk->addBulk($data);
+        }
+
+        // send bulk request
+        return $bulk->send($connection->getIndex(), $type);
+    }
+
+    /**
+     * Update a document by id.
+     *
+     * @param   string | null
+     * @param   array
+     * @return  array
+     */
+    public function updateRow($type = null, $data = array())
+    {
+        // Argument test
+        Argument::i()
+            ->test(1, 'string', 'null')
+            ->test(2, 'array');
+
+        // get the connection
+        $connection = $this;
+
+        // if type is set
+        if(isset($type)) {
+            // set type
+            $connection->setType($type);
+        }
+
+        // if data is set
+        if(!empty($data)) {
+            // set data
+            $connection->setBody($data);
+        }
+
+        // initialize bulk
+        $bulk = Bulk::i($connection);
+        // get request body
+        $body = $connection->getBody();
+
+        // clear request body
+        $connection->setBody(null);
+
+        // get the bulk action
+        $action = array();
+        // get the bulk data
+        $data   = array();
+
+        // iterate on each data
+        foreach($body as $key => $value) {
+            // if key starts with underscore
+            if(strpos($key, '_') === 0) {
+                $action[$key] = $value;
+            } else {
+                $data[$key] = $value;
+            }
+        }
+
+        // add bulk
+        $bulk->addBulk('update', $action);
+        // add bulk
+        $bulk->addBulk('doc', $data);
+
+        // send bulk request
+        return $bulk->send($connection->getIndex(), $type);
+    }
+
+    /**
+     * Update multiple documents by id.
+     *
+     * @param   string | null
+     * @param   array
+     * @return  array
+     */
+    public function updateRows($type = null, $data = array())
+    {
+        // Argument test
+        Argument::i()
+            ->test(1, 'string', 'null')
+            ->test(2, 'array');
+
+        // get the connection
+        $connection = $this;
+
+        // if type is set
+        if(isset($type)) {
+            // set type
+            $connection->setType($type);
+        }
+
+        // if data is set
+        if(!empty($data)) {
+            // set data
+            $connection->setBody($data);
+        }
+
+        // initialize bulk
+        $bulk = Bulk::i($connection);
+        // get request body
+        $body = $connection->getBody();
+
+        // clear request body
+        $connection->setBody(null);
+
+        // iterate on each body
+        foreach($body as $index) {
+            // get the bulk action
+            $action = array();
+            // get the bulk data
+            $data   = array();
+
+            // iterate on each data
+            foreach($index as $key => $value) {
+                // if key starts with underscore
+                if(strpos($key, '_') === 0) {
+                    $action[$key] = $value;
+                } else {
+                    $data[$key] = $value;
+                }
+            }
+
+            // add bulk
+            $bulk->addBulk('update', $action);
+            // add bulk
+            $bulk->addBulk('doc', $data);
+        }
+
+        // send bulk request
+        return $bulk->send($connection->getIndex(), $type);
+    }
+
+    /** 
+     * Delete a single document based on id.
+     *
+     * @param   string | null
+     * @param   array
+     * @return  array
+     */
+    public function deleteRow($type = null, $data = array())
+    {
+        // Argument test
+        Argument::i()->test(1, 'string', 'null');
+
+        // get the connection
+        $connection = $this;
+
+        // if type is set
+        if(isset($type)) {
+            // set type
+            $connection->setType($type);
+        }
+
+        // if data is set
+        if(!empty($data)) {
+            // set data
+            $connection->setBody($data);
+        }
+
+        return $connection
+        // require id
+        ->requireId()
+        // require index
+        ->requireIndex()
+        // require tpye
+        ->requireType()
+        // set method
+        ->setMethod(Index::DELETE)
+        // send request
+        ->send();
+    }
+
+    /**
+     * Delete multiple indexes based on id.
+     *
+     * @param   string | null
+     * @param   array
+     * @return  array
+     */
+    public function deleteRows($type = null, $data = array())
+    {
+        // Argument test
+        Argument::i()->test(1, 'string', 'null');
+
+        // get the connection
+        $connection = $this;
+
+        // if type is set
+        if(isset($type)) {
+            // set type
+            $connection->setType($type);
+        }
+
+        // if data is set
+        if(!empty($data)) {
+            // set data
+            $connection->setBody($data);
+        }
+
+        // initialize bulk
+        $bulk = Bulk::i($connection);
+        // get request body
+        $body = $connection->getBody();
+
+        // clear request body
+        $connection->setBody(null);
+
+        // iterate on each body
+        foreach($body as $index) {
+            // set delete action
+            $bulk->addBulk('delete', $index);
+        }
+
+        // send bulk request
+        return $bulk->send($connection->getIndex(), $type);
     }
 }

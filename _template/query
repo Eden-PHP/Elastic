@@ -1,0 +1,10 @@
+// Query Builder
+Query::i()
+->addMust('match', array('title' => 'Search'))
+->addMust('match', array('content' => 'Elasticsearch'))
+->addShould('match.title', 'Search')
+->addMustNot('match', 'news')
+->addFilter('term.status', 'published')
+->addFilter('range.published_date.gte', '2015-01-01');
+->getQuery();
+
