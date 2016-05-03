@@ -32,10 +32,11 @@ class Search extends Base
      * @var array
      */
     protected $resolve = array(
-        'source'            => '_source'
+        'source'            => '_source',
         'script.fields'     => 'script_fields',
         'fielddata.fields'  => 'fielddata_fields',
-        'post.filter'       => 'post_filter'
+        'post.filter'       => 'post_filter',
+        'scroll.id'         => 'scroll_id'
     );
 
     /**
@@ -166,8 +167,18 @@ class Search extends Base
      */
     public function getQuery()
     {
+        // get the original body
+        $body = $this->connection->getBody();
+
+        // if body is not empty
+        if(!is_null($body)) {
+            $body = array_merge($body, $this->builder->getQuery());
+        } else {
+            $body = $this->builder->getQuery();
+        }
+
         // return the query from builder
-        return $this->builder->getQuery();
+        return $body;
     }
 
     /**
@@ -189,6 +200,15 @@ class Search extends Base
         if(isset($type)) {
             // set type
             $connection->setType($type);
+        }
+
+        // get request body
+        $body = $this->getQuery();
+
+        // if body is not empty or not is null
+        if(!is_null($body) || (is_array($body) && !empty($body))) {
+            // set request body
+            $connection->setBody($body);
         }
 
         // send request

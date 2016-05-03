@@ -80,6 +80,26 @@ class Index extends Resource
     }
 
     /**
+     * Returns elastic Scroll API.
+     *
+     * @param   array
+     * @return  Eden\Elastic\Scroll
+     */
+    public function scroll($data = array())
+    {
+        // initialize scroll
+        $scroll = Scroll::i($this);
+
+        // data set?
+        if(!empty($data)) {
+            // set data
+            $search->setBody($data);
+        }
+
+        return $scroll;
+    }
+
+    /**
      * Returns elastic query builder.
      *
      * @return  Eden\Elastic\Query
