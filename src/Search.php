@@ -27,6 +27,18 @@ class Search extends Base
     protected $builder = null;
 
     /**
+     * Resolve to reserved keys.
+     *
+     * @var array
+     */
+    protected $resolve = array(
+        'source'            => '_source'
+        'script.fields'     => 'script_fields',
+        'fielddata.fields'  => 'fielddata_fields',
+        'post.filter'       => 'post_filter'
+    );
+
+    /**
      * Default connection resource.
      *
      * @var Eden\Elastic\Index
@@ -72,14 +84,11 @@ class Search extends Base
 
         // are we going to set?
         if(strpos($name, 'set') === 0) {
-            // set separator
-            $separator = '.';
-            
-            //transform method to column name
+            // transform to query key
             $key = \Eden_String_Index::i($name)
                 ->substr(3)
-                ->preg_replace("/([A-Z0-9])/", $separator."$1")
-                ->substr(strlen($separator))
+                ->preg_replace("/([A-Z0-9])/", '.'."$1")
+                ->substr(strlen('.'))
                 ->strtolower()
                 ->get();
             
@@ -87,6 +96,12 @@ class Search extends Base
             if (!isset($args[0])) {
                 // default is null
                 $args[0] = null;
+            }
+
+            // check resolve key
+            if(isset($this->resolve[$key])) {
+                // get the key to resolve
+                $key = $this->resolve[$key];
             }
 
             // if we have two arguments
