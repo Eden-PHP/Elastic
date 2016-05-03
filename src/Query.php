@@ -191,7 +191,7 @@ class Query extends Base
      * @param   int
      * @return  *mixed
      */
-    public function scan($target, $keys, $start, $end)
+    private function scan($target, $keys, $start, $end)
     {
         // get current
         $current = isset($target[$keys[$start]]) ? $target[$keys[$start]] : null;

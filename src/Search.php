@@ -69,6 +69,90 @@ class Search extends Base
 
             return $this;
         }
+
+        // are we going to set?
+        if(strpos($name, 'set') === 0) {
+            // set separator
+            $separator = '.';
+            
+            //transform method to column name
+            $key = \Eden_String_Index::i($name)
+                ->substr(3)
+                ->preg_replace("/([A-Z0-9])/", $separator."$1")
+                ->substr(strlen($separator))
+                ->strtolower()
+                ->get();
+            
+            // if arg isn't set
+            if (!isset($args[0])) {
+                // default is null
+                $args[0] = null;
+            }
+
+            // if we have two arguments
+            if(count($args) == 2 && isset($args[0])) {
+                // set the key
+                $key = $key . '.' . $args[0];
+                // set the value
+                $val = isset($args[1]) ? $args[1] : null;
+
+                // add tree to builder
+                $this->builder->setTree($key, $val);
+            } else {
+                // set the value
+                $val = isset($args[0]) ? $args[0] : null;
+
+                // add tree to builder
+                $this->builder->setTree($key, $val);
+            }
+
+            return $this;
+        }
+    }
+
+    /**
+     * Set sort helper.
+     *
+     * @param   string | array | null
+     * @param   *mixed
+     * @return  $this
+     */
+    public function setSort($field = null, $value = null)
+    {
+        // Argument test
+        Argument::i()->test(1, 'string', 'array', 'null');
+
+        // get the current sort
+        $sort = $this->builder->getTree('sort');
+
+        // if sort is null
+        if(is_null($sort)) {
+            $sort = array();
+        }
+
+        // if we have two argumets
+        if(func_num_args() == 2) {
+            // set sort field plus value
+            $sort[] = array($field => $value);
+        } else {
+            $sort[] = $field;
+        }
+
+        // set the sort tree
+        $this->builder->setTree('sort', $sort);
+
+        return $this;
+    }
+
+    /**
+     * Get the current query.
+     *
+     * @return  array
+     */
+    public function getQuery()
+    {
+        // return the query from builder
+        return $this->builder->getQuery();
     }
 
     /**
