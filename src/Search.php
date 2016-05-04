@@ -228,6 +228,28 @@ class Search extends Base
     }
 
     /**
+     * Returns elastic Shards API.
+     *
+     * @return  Eden\Elastic\Search\Shards
+     */
+    public function shards()
+    {
+        // initialize shards
+        $shards = Search\Shards::i($this->connection);
+
+        // get the current data
+        $data = $this->getQuery();
+
+        // data set?
+        if(!empty($data)) {
+            // set data
+            $shards->setBody($data);
+        }
+
+        return $shards;
+    }
+
+    /**
      * Get results based on the query
      * or query body given.
      *
