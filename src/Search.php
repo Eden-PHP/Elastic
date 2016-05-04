@@ -36,7 +36,9 @@ class Search extends Base
         'script.fields'     => 'script_fields',
         'fielddata.fields'  => 'fielddata_fields',
         'post.filter'       => 'post_filter',
-        'scroll.id'         => 'scroll_id'
+        'scroll.id'         => 'scroll_id',
+        'indices.boost'     => 'indices_boost',
+        'min.score'         => 'min_score'
     );
 
     /**
@@ -179,6 +181,50 @@ class Search extends Base
 
         // return the query from builder
         return $body;
+    }
+
+    /**
+     * Returns elastic Search Template API.
+     *
+     * @return  Eden\Elastic\Search\Tempplate
+     */
+    public function template()
+    {
+        // initialize template
+        $template = Search\Template::i($this->connection);
+
+        // get the current data
+        $data = $this->getQuery();
+
+        // data set?
+        if(!empty($data)) {
+            // set data
+            $template->setBody($data);
+        }
+
+        return $template;
+    }
+
+    /**
+     * Returns elastic Scroll API.
+     *
+     * @return  Eden\Elastic\Search\Scroll
+     */
+    public function scroll()
+    {
+        // initialize scroll
+        $scroll = Search\Scroll::i($this->connection);
+
+        // get the current data
+        $data = $this->getQuery();
+
+        // data set?
+        if(!empty($data)) {
+            // set data
+            $scroll->setBody($data);
+        }
+
+        return $scroll;
     }
 
     /**

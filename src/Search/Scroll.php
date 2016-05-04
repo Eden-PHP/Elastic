@@ -7,7 +7,12 @@
  * distributed with this package.
  */
 
-namespace Eden\Elastic;
+namespace Eden\Elastic\Search;
+
+use Eden\Elastic\Argument as Argument;
+use Eden\Elastic\Exception as Exception;
+use Eden\Elastic\Index as Index;
+use Eden\Elastic\Search as Search;
 
 /**
  * Search Scroll Class
