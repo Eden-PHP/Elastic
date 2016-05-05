@@ -92,17 +92,17 @@ class Index extends Resource
     /**
      * Create or index a single document.
      *
+     * @param   array | null
      * @param   string | null
-     * @param   array
      * @param   bool
      * @return  array
      */
-    public function createRow($type = null, $data = array(), $auto = false)
+    public function createRow($data = array(), $type = null, $auto = false)
     {
         // Argument test
         Argument::i()
-            ->test(1, 'string', 'null')
-            ->test(2, 'array')
+            ->test(1, 'array', 'null')
+            ->test(2, 'string', 'null')
             ->test(3, 'bool');
 
         // get the connection
@@ -143,16 +143,16 @@ class Index extends Resource
     /**
      * Create multiple documents.
      *
+     * @param   array | null
      * @param   string | null
-     * @param   array
      * @return  array
      */
-    public function createRows($type = null, $data = array())
+    public function createRows($data = array(), $type = null)
     {
         // Argument test
         Argument::i()
-            ->test(1, 'string', 'null')
-            ->test(2, 'array');
+            ->test(1, 'array', 'null')
+            ->test(2, 'string', 'null');
 
         // get the connection
         $connection = $this;
@@ -207,16 +207,16 @@ class Index extends Resource
     /**
      * Update a document by id.
      *
+     * @param   array | null
      * @param   string | null
-     * @param   array
      * @return  array
      */
-    public function updateRow($type = null, $data = array())
+    public function updateRow($data = array(), $type = null)
     {
         // Argument test
         Argument::i()
-            ->test(1, 'string', 'null')
-            ->test(2, 'array');
+            ->test(1, 'array',  'null')
+            ->test(2, 'string', 'null');
 
         // get the connection
         $connection = $this;
@@ -268,16 +268,16 @@ class Index extends Resource
     /**
      * Update multiple documents by id.
      *
+     * @param   array | null
      * @param   string | null
-     * @param   array
      * @return  array
      */
-    public function updateRows($type = null, $data = array())
+    public function updateRows($data = array(), $type = null)
     {
         // Argument test
         Argument::i()
-            ->test(1, 'string', 'null')
-            ->test(2, 'array');
+            ->test(1, 'array', 'null')
+            ->test(2, 'string', 'null');
 
         // get the connection
         $connection = $this;
@@ -332,14 +332,16 @@ class Index extends Resource
     /** 
      * Delete a single document based on id.
      *
+     * @param   array | null
      * @param   string | null
-     * @param   array
      * @return  array
      */
-    public function deleteRow($type = null, $data = array())
+    public function deleteRow($data = array(), $type = null)
     {
         // Argument test
-        Argument::i()->test(1, 'string', 'null');
+        Argument::i()
+            ->test(1, 'array', 'null')
+            ->test(2, 'string', 'null');
 
         // get the connection
         $connection = $this;
@@ -372,14 +374,16 @@ class Index extends Resource
     /**
      * Delete multiple indexes based on id.
      *
+     * @param   array | null
      * @param   string | null
-     * @param   array
      * @return  array
      */
-    public function deleteRows($type = null, $data = array())
+    public function deleteRows($data = array(), $type = null)
     {
         // Argument test
-        Argument::i()->test(1, 'string', 'null');
+        Argument::i()
+            ->test(1, 'array', 'null')
+            ->test(2, 'string', 'null');
 
         // get the connection
         $connection = $this;
@@ -412,5 +416,111 @@ class Index extends Resource
 
         // send bulk request
         return $bulk->send($connection->getIndex(), $type);
+    }
+
+    /**
+     * Get document by id.
+     *
+     * @param   string | int
+     * @param   string | null
+     * @param   bool
+     * @return  array
+     */
+    public function getDocument($id, $type = null, $test = false)
+    {
+        // Argument test
+        Argument::i()
+            ->test(1, 'string', 'int')
+            ->test(2, 'string', 'null');
+
+        // get the connection
+        $connection  = $this;
+
+        // if type is set
+        if(isset($type)) {
+            // set index type
+            $connection->setType($type);
+        }
+
+        // if test existence
+        if($test) {
+            // set head method
+            $connection->setMethod(Index::HEAD);
+        } else {
+            // set get method
+            $connection->setMethod(Index::GET);
+        }
+
+        return $connection
+        // require index
+        ->requireIndex()
+        // require type
+        ->requireType()
+        // require id
+        ->requireId()
+        // set id
+        ->setId($id)
+        // send request
+        ->send();
+    }
+
+    /**
+     * Get documents by id.
+     *
+     * @param   array | null
+     * @param   string | null
+     * @return  array
+     */
+    public function getDocuments($data = array(), $type = null)
+    {
+        // Argument test
+        Argument::i()
+            ->test(1, 'array', 'null')
+            ->test(2, 'string', 'null');
+
+        // get the connection
+        $connection  = $this;
+
+        // if type is set
+        if(isset($type)) {
+            // set index type
+            $connection->setType($type);
+        }
+
+        // if data is not empty
+        if(!empty($data)) {
+            // load up the query builder
+            $query = Query::i();
+
+            // create the path
+            $path = 'query.bool.should.%s.match';
+
+            // let's add every path
+            foreach($data as $index => $value) {
+                // format the path
+                $tree = sprintf($path, $index);
+
+                // add the query tree
+                $query->setTree($tree, $value);
+            }
+
+            // get the whole query
+            $query = $query->getQuery();
+
+            // set the request body
+            $connection->setBody($query);
+        }
+
+        return $connection
+        // require index
+        ->requireIndex()
+        // require type
+        ->requireType()
+        // require body
+        ->requireBody()
+        // set endpoint
+        ->setEndpoint('_search')
+        // send request
+        ->send();
     }
 }
