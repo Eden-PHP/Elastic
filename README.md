@@ -6,6 +6,7 @@
 - Create / Index Row(s) by Id
 - Update Row(s) by Id
 - Delete Row(s) by Id
+- Get Row(s) by Id
 - Query Builder
 - Bulk
 - Search

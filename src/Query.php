@@ -55,18 +55,8 @@ class Query extends Base
             return $this;
         }
 
-        // replace dot's with >
-        $key = str_replace('.', '>', $key);
-        // replace all escaped keys
-        $key = preg_replace_callback('/(\[[^]]*?)(\>)([^]]*?\])/m', function($matches) { 
-            // replace back all the > to dots
-            return str_replace('>', '.', $matches[0]); 
-        }, $key);
-        // replace all [ ]
-        $key = str_replace(array('[', ']'), '', $key);
-
-        // explode keys
-        $keys = explode('>', $key);
+        // create key path
+        $keys = $this->createKey($key);
 
         // get the original set of query
         $original  = $this->query;
@@ -110,18 +100,8 @@ class Query extends Base
             return $this->query;
         }
 
-        // replace dot's with >
-        $key = str_replace('.', '>', $key);
-        // replace all escaped keys
-        $key = preg_replace_callback('/(\[[^]]*?)(\>)([^]]*?\])/m', function($matches) { 
-            // replace back all the > to dots
-            return str_replace('>', '.', $matches[0]); 
-        }, $key);
-        // replace all [ ]
-        $key = str_replace(array('[', ']'), '', $key);
-
-        // explode keys
-        $keys = explode('>', $key);
+        // create key path
+        $keys = $this->createKey($key);
 
         // get the original set of query
         $original  = $this->query;
@@ -135,6 +115,42 @@ class Query extends Base
         }
 
         return $this->scan($this->query, $keys, 0, $max);
+    }
+
+    /**
+     * Add a value to an array path.
+     *
+     * @param   string
+     * @param   *mixed
+     * @param   string | null
+     * @return  $this
+     */
+    public function addTree($key, $value = null, $custom = null)
+    {
+        // Argument test
+        Argument::i()
+            ->test(1, 'string')
+            ->test(3, 'string', 'null');
+
+        // get the key path
+        $current = $this->getTree($key);
+
+        // if it's null
+        if(is_null($current)) {
+            $current = array();
+        }
+
+        // if has custom keys
+        if($custom) {
+            $current[$custom] = $value;
+        } else {
+            $current[] = $value;
+        }
+
+        // set the tree
+        $this->setTree($key, $current);
+
+        return $this;
     }
 
     /**
@@ -210,5 +226,32 @@ class Query extends Base
         if(is_array($current)) {
             return $this->scan($current, $keys, ++$start, $end);
         }
+    }
+
+    /**
+     * Creates a path.
+     *
+     * @param   string
+     * @return  string
+     */
+    private function createKey($key)
+    {
+        // Argument test
+        Argument::i()->test(1, 'string');
+
+        // replace dot's with >
+        $key = str_replace('.', '>', $key);
+        // replace all escaped keys
+        $key = preg_replace_callback('/(\[[^]]*?)(\>)([^]]*?\])/m', function($matches) { 
+            // replace back all the > to dots
+            return str_replace('>', '.', $matches[0]); 
+        }, $key);
+        // replace all [ ]
+        $key = str_replace(array('[', ']'), '', $key);
+
+        // explode keys
+        $keys = explode('>', $key);
+
+        return $keys;
     }
 }
