@@ -88,4 +88,113 @@ class Document extends Base
             return $this;
         }
     }
+
+    /**
+     * Send's up an update by query api call.
+     *
+     * @param   string | null
+     * @param   string | null
+     * @return  array
+     */
+    public function updateByQuery($index = null, $type = null)
+    {
+        // Argument test
+        Argument::i()
+            ->test(1, 'string', 'null')
+            ->test(2, 'string', 'null');
+
+        // get current connection
+        $connection = $this->connection;
+
+        // if both are set
+        if(func_num_args() == 2) {
+            // set index and set type
+            $connection->setIndex($index)->setType($type);
+        } else if(func_num_args() == 1) {
+            // set type
+            $connection->setType($index);
+        }
+
+        return $connection
+        // require index
+        ->requireIndex()
+        // set method to post
+        ->setMethod(Index::POST)
+        // set endpoint
+        ->setEndpoint('_update_by_query')
+        // send request
+        ->send();
+    }
+
+    /**
+     * Send's up a multi-get api request.
+     *
+     * @param   array | null
+     * @param   string | null
+     * @param   string | null
+     * @return  array
+     */
+    public function multiGet($data = array(), $index = null, $type = null)
+    {
+        // Argument test
+        Argument::i()
+            ->test(1, 'array', 'null')
+            ->test(2, 'string', 'null')
+            ->test(3, 'string', 'null');
+
+        // get current connection
+        $connection = $this->connection;
+
+        // if we have all arguments
+        if(func_num_args() == 3) {
+            $connection
+            // set index
+            ->setIndex($index)
+            // set type
+            ->setType($type)
+            // set body
+            ->setBody($data);
+        } else if(func_num_args() == 2) {
+            $connection
+            // set index
+            ->setIndex($index)
+            // set body
+            ->setBody($data);
+        } else {
+            // get original index
+            $index = $connection->getIndex();
+            // get original type
+            $type  = $connection->getType();
+
+            // send the request
+            $response = $connection
+            // require body
+            ->requireBody()
+            // set the body
+            ->setBody($data)
+            // send request
+            ->send();
+
+            // set original index and type
+            $connection->setIndex($index)->setType($type);
+
+            return $response;
+        }
+
+        return $connection
+        // require body
+        ->requireBody()
+        // send request
+        ->send();
+    }
+
+    /**
+     * Returns the Document Reindex Class.
+     *
+     * @return  Eden\Elastic\Document\Reindex
+     */
+    public function reindex()
+    {
+        return Document\Reindex::i($this->connection);
+    }
 }
