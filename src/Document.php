@@ -197,4 +197,73 @@ class Document extends Base
     {
         return Document\Reindex::i($this->connection);
     }
+
+    /**
+     * Returns information and statistics 
+     * on terms in the fields of a particular 
+     * document.
+     *
+     * @param   scalar | null
+     * @param   string | null
+     * @return  array
+     */
+    public function termVectors($id = null, $type = null)
+    {
+        // Argument test
+        Argument::i()
+            ->test(1, 'scalar', 'null')
+            ->test(2, 'string', 'null');
+ 
+        // set request basics
+        $connection = $this->connection;
+ 
+        // is type set?
+        if(isset($type)) {
+             // set type
+             $connection->setType($type);
+         }
+ 
+        return $connection
+        // require index
+        ->requireIndex()
+        // require type
+        ->requireType()
+        // set id
+        ->setId($id)
+        // set endpoint
+        ->setEndpoint('_termvectors')
+        // send request
+        ->send();
+    }
+
+    /**
+     * Multi termvectors API allows 
+     * to get multiple termvectors at 
+     * once. The documents from which 
+     * to retrieve the term vectors are 
+     * specified by an index, type and id.
+     *
+     * @param   string | null
+     * @return  array
+     */
+    public function multiTermVectors($type = null)
+    {
+        // Argument test
+        Argument::i()->test(1, 'string', 'null');
+
+        // set request basics
+        $connection = $this->connection;
+
+        // is type set?
+        if(isset($type)) {
+            // set type
+            $connection->setType($type);
+        }
+
+        return $connection
+        // set endpoint
+        ->setEndpoint('_mtermvectors')
+        // send request
+        ->send();
+    }
 }
