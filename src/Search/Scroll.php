@@ -36,7 +36,7 @@ class Scroll extends Search
     }
 
     /**
-     * Create searc scroll context.
+     * Create search scroll context.
      *
      * @param   string
      * @param   string | null
