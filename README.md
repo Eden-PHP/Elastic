@@ -3,6 +3,8 @@
 
 ### API's available currently
 - Resource (Connection Class)
+- Document
+    - Reindex
 - Create / Index Row(s) by Id
 - Update Row(s) by Id
 - Delete Row(s) by Id
