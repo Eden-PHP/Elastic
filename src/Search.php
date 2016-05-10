@@ -38,7 +38,9 @@ class Search extends Base
         'post.filter'       => 'post_filter',
         'scroll.id'         => 'scroll_id',
         'indices.boost'     => 'indices_boost',
-        'min.score'         => 'min_score'
+        'min.score'         => 'min_score',
+        'start'             => 'from',
+        'range'             => 'size'
     );
 
     /**
@@ -123,6 +125,92 @@ class Search extends Base
                 // add tree to builder
                 $this->builder->setTree($key, $val);
             }
+
+            return $this;
+        }
+
+        // are we going to add?
+        if(strpos($name, 'add') === 0) {
+            // transform to query key
+            $key = \Eden_String_Index::i($name)
+                ->substr(3)
+                ->preg_replace("/([A-Z0-9])/", '.'."$1")
+                ->substr(strlen('.'))
+                ->strtolower()
+                ->get();
+            
+            // if arg isn't set
+            if (!isset($args[0])) {
+                // default is null
+                $args[0] = null;
+            }
+
+            // check resolve key
+            if(isset($this->resolve[$key])) {
+                // get the key to resolve
+                $key = $this->resolve[$key];
+            }
+
+            // if we have two arguments
+            if(count($args) == 2 && isset($args[0])) {
+                // set the key
+                $key = $key . '.' . $args[0];
+                // set the value
+                $val = isset($args[1]) ? $args[1] : null;
+
+                // add tree to builder
+                $this->builder->addTree($key, $val);
+            } else {
+                // set the value
+                $val = isset($args[0]) ? $args[0] : null;
+
+                // add tree to builder
+                $this->builder->addTree($key, $val);
+            }
+
+            return $this;
+        }
+
+        // are we going to filter?
+        if(strpos($name, 'filterBy') === 0) {
+            // transform to query key
+            $key = \Eden_String_Index::i($name)
+                ->substr(8)
+                ->preg_replace("/([A-Z0-9])/", '_'."$1")
+                ->substr(strlen('_'))
+                ->strtolower()
+                ->get();
+            
+            // if arg isn't set
+            if (!isset($args[0])) {
+                // default is null
+                $args[0] = 'DESC';
+            }
+
+            // add it to builder
+            $this->builder->addTree('query.bool.must', array('match' => array($key => $args[0])));
+
+            return $this;
+        }
+
+        // are we going to sort?
+        if(strpos($name, 'sortBy') === 0) {
+            // transform to query key
+            $key = \Eden_String_Index::i($name)
+                ->substr(6)
+                ->preg_replace("/([A-Z0-9])/", '_'."$1")
+                ->substr(strlen('_'))
+                ->strtolower()
+                ->get();
+            
+            // if arg isn't set
+            if (!isset($args[0])) {
+                // default is null
+                $args[0] = 'DESC';
+            }
+
+            // add it to builder
+            $this->builder->addTree('sort', array($key => $args[0]));
 
             return $this;
         }
@@ -250,13 +338,53 @@ class Search extends Base
     }
 
     /**
+     * Returns the suggesters API.
+     *
+     * @return  Eden\Elastic\Search\Suggesters
+     */
+    public function suggesters()
+    {
+        // initialize shards
+        $suggesters = Search\Suggesters::i($this->connection);
+
+        // get the current data
+        $data = $this->getQuery();
+
+        // data set?
+        if(!empty($data)) {
+            // set data
+            $suggesters->setBody($data);
+        }
+
+        return $suggesters;
+    }
+
+    /**
+     * Get single record based on the
+     * query or the query body given.
+     *
+     * @param   string | null
+     * @return  array
+     */
+    public function getRow($type = null)
+    {
+        // Argument test
+        Argument::i()->test(1, 'string', 'null');
+
+        // set range
+        $this->setRange(1);
+
+        return $this->getRows($type);
+    }
+
+    /**
      * Get results based on the query
      * or query body given.
      *
      * @param   string | null
      * @return  array
      */
-    public function getResults($type = null)
+    public function getRows($type = null)
     {
         // Argument test
         Argument::i()->test(1, 'string', 'null');

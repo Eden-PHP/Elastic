@@ -111,7 +111,7 @@ class Query extends Base
         // if we only have 1 key
         if($max == 1) {
             // return the key
-            return isset($this->query[array_pop($keys)]) ? $this->query[array_pop($keys)] : null;
+            return isset($this->query[$keys[0]]) ? $this->query[$keys[0]] : null;
         }
 
         return $this->scan($this->query, $keys, 0, $max);

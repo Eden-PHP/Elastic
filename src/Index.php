@@ -70,8 +70,14 @@ class Index extends Resource
         // initialize search
         $search = Search::i($this);
 
+        // is string?
+        if(is_string($data)) {
+            // set type
+            $search->setType($data);
+        }
+
         // data set?
-        if(!empty($data)) {
+        if(is_array($data) && !empty($data)) {
             // set data
             $search->setBody($data);
         }
@@ -97,7 +103,7 @@ class Index extends Resource
      * @param   bool
      * @return  array
      */
-    public function createRow($data = array(), $type = null, $auto = false)
+    public function insert($data = array(), $type = null, $auto = false)
     {
         // Argument test
         Argument::i()
@@ -147,7 +153,7 @@ class Index extends Resource
      * @param   string | null
      * @return  array
      */
-    public function createRows($data = array(), $type = null)
+    public function insertRows($data = array(), $type = null)
     {
         // Argument test
         Argument::i()
@@ -211,7 +217,7 @@ class Index extends Resource
      * @param   string | null
      * @return  array
      */
-    public function updateRow($data = array(), $type = null)
+    public function update($data = array(), $type = null)
     {
         // Argument test
         Argument::i()
@@ -336,7 +342,7 @@ class Index extends Resource
      * @param   string | null
      * @return  array
      */
-    public function deleteRow($data = array(), $type = null)
+    public function delete($data = array(), $type = null)
     {
         // Argument test
         Argument::i()
@@ -419,14 +425,14 @@ class Index extends Resource
     }
 
     /**
-     * Get document by id.
+     * Select document by id.
      *
      * @param   string | int
      * @param   string | null
      * @param   bool
      * @return  array
      */
-    public function getDocument($id, $type = null, $test = false)
+    public function get($id, $type = null, $test = false)
     {
         // Argument test
         Argument::i()
@@ -465,13 +471,13 @@ class Index extends Resource
     }
 
     /**
-     * Get documents by id.
+     * Select documents by id.
      *
      * @param   array | null
      * @param   string | null
      * @return  array
      */
-    public function getDocuments($data = array(), $type = null)
+    public function getRows($data = array(), $type = null)
     {
         // Argument test
         Argument::i()
