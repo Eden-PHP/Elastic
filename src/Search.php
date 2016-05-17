@@ -40,7 +40,8 @@ class Search extends Base
         'indices.boost'     => 'indices_boost',
         'min.score'         => 'min_score',
         'start'             => 'from',
-        'range'             => 'size'
+        'range'             => 'size',
+        'dis.max'           => 'dis_max'
     );
 
     /**
@@ -184,7 +185,7 @@ class Search extends Base
             // if arg isn't set
             if (!isset($args[0])) {
                 // default is null
-                $args[0] = 'DESC';
+                $args[0] = null;
             }
 
             // add it to builder
@@ -217,13 +218,28 @@ class Search extends Base
     }
 
     /**
-     * Set sort helper.
+     * Add filter based on path and value.
      *
      * @param   string | array | null
      * @param   *mixed
      * @return  $this
      */
-    public function setSort($field = null, $value = null)
+    public function addFilter($key = null, $value = null)
+    {
+        // Argument test
+        Argument::i()->test(1, 'string', 'array', 'null');
+
+        return $this;
+    }
+
+    /**
+     * Add sort helper.
+     *
+     * @param   string | array | null
+     * @param   *mixed
+     * @return  $this
+     */
+    public function addSort($field = null, $value = null)
     {
         // Argument test
         Argument::i()->test(1, 'string', 'array', 'null');
@@ -261,7 +277,7 @@ class Search extends Base
         $body = $this->connection->getBody();
 
         // if body is not empty
-        if(!is_null($body)) {
+        if(is_array($body)) {
             $body = array_merge($body, $this->builder->getQuery());
         } else {
             $body = $this->builder->getQuery();
@@ -409,10 +425,6 @@ class Search extends Base
 
         // send request
         return $connection
-        // require index
-        ->requireIndex()
-        // require type
-        ->requireType()
         // send endpoint
         ->setEndpoint('_search')
         // send request

@@ -86,6 +86,58 @@ class Index extends Resource
     }
 
     /**
+     * Returns elastic model.
+     *
+     * @param   array
+     * @return  Eden\Elastic\Model
+     */
+    public function model($data = array())
+    {
+        // initialize model
+        $model = Model::i($this);
+
+        // is string?
+        if(is_string($data)) {
+            // set type
+            $model->setType($data);
+        }
+
+        // data set?
+        if(is_array($data) && !empty($data)) {
+            // set data
+            $model->setBody($data);
+        }
+
+        return $model;
+    }
+
+    /**
+     * Returns elastic collection.
+     *
+     * @param   array
+     * @return  Eden\Elastic\Collection
+     */
+    public function collection($data = array())
+    {
+        // initialize collection
+        $collection = Collection::i($this);
+
+        // is string?
+        if(is_string($data)) {
+            // set type
+            $collection->setType($data);
+        }
+
+        // data set?
+        if(is_array($data) && !empty($data)) {
+            // set data
+            $collection->setBody($data);
+        }
+
+        return $collection;
+    }
+
+    /**
      * Returns elastic query builder.
      *
      * @return  Eden\Elastic\Query
@@ -369,7 +421,7 @@ class Index extends Resource
         ->requireId()
         // require index
         ->requireIndex()
-        // require tpye
+        // require type
         ->requireType()
         // set method
         ->setMethod(Index::DELETE)
