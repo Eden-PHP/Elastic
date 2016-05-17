@@ -24,4 +24,17 @@ namespace Eden\Elastic;
  */
 class Exception extends \Eden\Core\Exception
 {
+    /**
+     * Error template
+     *
+     * @const string
+     */
+    const NOT_SUB_MODEL = 'Class %s is not a child of Eden\\Model\\Index';
+
+    /**
+     * Error template
+     *
+     * @const string
+     */
+    const NOT_SUB_COLLECTION = 'Class %s is not a child of Eden\\Collection\\Index';
 }

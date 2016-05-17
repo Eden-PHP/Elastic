@@ -20,6 +20,13 @@ namespace Eden\Elastic;
 class Index extends Resource
 {
     /**
+     * Default model.
+     *
+     * @const string
+     */
+    const MODEL = 'Eden\\Elastic\\Model';
+
+    /**
      * Returns elastic Bulk API.
      *
      * @param   array
@@ -94,7 +101,7 @@ class Index extends Resource
     public function model($data = array())
     {
         // initialize model
-        $model = Model::i($this);
+        $model = Model::i();
 
         // is string?
         if(is_string($data)) {
@@ -105,10 +112,10 @@ class Index extends Resource
         // data set?
         if(is_array($data) && !empty($data)) {
             // set data
-            $model->setBody($data);
+            $this->setBody($data);
         }
 
-        return $model;
+        return $model->setConnection($this);
     }
 
     /**
@@ -120,7 +127,7 @@ class Index extends Resource
     public function collection($data = array())
     {
         // initialize collection
-        $collection = Collection::i($this);
+        $collection = Collection::i();
 
         // is string?
         if(is_string($data)) {
@@ -131,10 +138,14 @@ class Index extends Resource
         // data set?
         if(is_array($data) && !empty($data)) {
             // set data
-            $collection->setBody($data);
+            $collection->set($data);
         }
 
-        return $collection;
+        return $collection
+        // set the connection
+        ->setConnection($this)
+        // set the model
+        ->setModel(Index::MODEL);
     }
 
     /**

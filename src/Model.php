@@ -27,20 +27,6 @@ class Model extends \Eden\Model\Index
     protected $connection = null;
 
     /**
-     * Set default connection resource.
-     *
-     * @param   Eden\Elastic\Index
-     */
-    public function __construct(Index $connection)
-    {
-        // Argument test
-        Argument::i()->test(1, '\\Eden\\Elastic\\Index');
-
-        // set connection
-        $this->connection = $connection;
-    }
-
-    /**
      * Set connection handler.
      *
      * @param   Eden\Elastic\Index
@@ -132,7 +118,7 @@ class Model extends \Eden\Model\Index
         $this->original = $data;
 
         // send the request
-        $this->connection->update($data, $type);
+        $this->connection->insert($data, $type);
 
         return $this;
     }
