@@ -41,6 +41,57 @@ class Model extends \Eden\Model\Index
     }
 
     /**
+     * Set connection handler.
+     *
+     * @param   Eden\Elastic\Index
+     * @return  $this
+     */
+    public function setConnection(Index $connection)
+    {
+        // Argument test
+        Argument::i()->test(1, '\\Eden\\Elastic\\Index');
+
+        // set connection
+        $this->connection = $connection;
+    
+        return $this;
+    }
+
+    /**
+     * Set index name.
+     *
+     * @param   string
+     * @return  $this
+     */
+    public function setIndex($index)
+    {
+        // Argument test
+        Argument::i()->test(1, 'string');
+
+        // set the connection index
+        $this->connection->setIndex($index);
+
+        return $this;
+    }
+
+    /**
+     * Set index type.
+     *
+     * @param   string
+     * @return  $this
+     */
+    public function setType($type)
+    {
+        // Argument test
+        Argument::i()->test(1, 'string');
+
+        // set the connection type
+        $this->connection->setType($type);
+
+        return $this;
+    }
+
+    /**
      * Set model id.
      *
      * @param   int | string
