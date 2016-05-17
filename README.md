@@ -17,3 +17,5 @@
     - Search Scroll
     - Search Shards
     - Search Suggesters
+- Model
+- Collection
