@@ -229,6 +229,32 @@ class Search extends Base
         // Argument test
         Argument::i()->test(1, 'string', 'array', 'null');
 
+        // get the original query
+        $query = $this->builder->getTree('query.bool');
+
+        // if query is null
+        if(is_null($query)) {
+            // set blank array
+            $query = array();
+        }
+
+        // if key is string and value is string
+        if(is_array($key)) {
+            // merge query and key
+            $query = array_merge($query, $key);
+
+            // set the tree
+            $this->builder->setTree('query.bool', $query);
+
+            return $this;
+        }
+
+        // if key and value is set
+        if(is_string($key) && !is_null($value)) {
+            // set the tree
+            $this->builder->setTree('query.bool.' . $key, $value);
+        }
+
         return $this;
     }
 
