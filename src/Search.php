@@ -402,6 +402,22 @@ class Search extends Base
     }
 
     /**
+     * Returns the results as a collection.
+     *
+     * @param   string | null
+     * @return  Eden\Elastic\Collection
+     */
+    public function getCollection($type = null) {}
+
+    /**
+     * Returns the result as a model.
+     *
+     * @param   string | null
+     * @return  Eden\Elastic\Model
+     */
+    public function getModel($tyoe = null) {}
+
+    /**
      * Get single record based on the
      * query or the query body given.
      *
