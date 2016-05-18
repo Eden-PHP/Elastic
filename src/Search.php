@@ -477,6 +477,48 @@ class Search extends Base
     }
 
     /**
+     * Get the total records based on the
+     * queyr or the query body given.
+     *
+     * @param   string | null
+     * @return  array
+     */
+    public function getTotal($type = null)
+    {
+        // Argument test
+        Argument::i()->test(1, 'string', 'null');
+
+        // get the connection
+        $connection = $this->connection;
+
+        // if type is set
+        if(isset($type)) {
+            // set type
+            $connection->setType($type);
+        }
+
+        // get request body
+        $body = $this->getQuery();
+
+        // if body is not empty or not is null
+        if(!is_null($body) || (is_array($body) && !empty($body))) {
+            // set request body
+            $connection->setBody($body);
+        }
+
+        // send request
+        return $connection
+        // require index
+        ->requireIndex()
+        // require type
+        ->requireType()
+        // send endpoint
+        ->setEndpoint('_count')
+        // send request
+        ->send();
+    }
+
+    /**
      * Get single record based on the
      * query or the query body given.
      *
