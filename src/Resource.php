@@ -133,6 +133,13 @@ class Resource extends Base
     protected $test = false;
 
     /**
+     * Debug flag.
+     *
+     * @var bool
+     */
+    protected $debug = false;
+
+    /**
      * Binary request flag.
      *
      * @var bool
@@ -402,12 +409,6 @@ class Resource extends Base
             $request->setHeaders($key, $value);
         }
 
-        echo 'Request URL     : ' . $url . PHP_EOL;
-        echo 'Request Method  : ' . $this->method . PHP_EOL;
-        echo 'Request Data    : ' . PHP_EOL;
-        print_r($this->body);
-        echo PHP_EOL . PHP_EOL;
-
         try {
             // trigger request
             $response = $request->setFollowLocation(true)
@@ -422,6 +423,21 @@ class Resource extends Base
         } catch(\Exception $e) {
             // throw an error
             return Exception::i(self::REQUEST_ERROR)->trigger();
+        }
+
+        // if debug
+        if($this->debug) {
+            echo '<pre style="color:red">';
+            echo '**DEBUG MODE**' . PHP_EOL;
+            echo 'Request URL     : ' . $url . PHP_EOL;
+            echo 'Request Method  : ' . $this->method . PHP_EOL;
+            echo 'Request Data    : ' . PHP_EOL;
+            print_r($this->body);
+            echo PHP_EOL;
+            echo 'Request Meta    : ' . PHP_EOL;
+            print_r($request->getMeta());
+            echo PHP_EOL . PHP_EOL;
+            echo '</pre>';
         }
 
         // get request meta data

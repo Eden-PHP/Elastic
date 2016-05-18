@@ -407,7 +407,38 @@ class Search extends Base
      * @param   string | null
      * @return  Eden\Elastic\Collection
      */
-    public function getCollection($type = null) {}
+    public function getCollection($type = null) 
+    {
+        // Argument test
+        Argument::i()->test(1, 'string', 'null');
+
+        // get the results first
+        $results = $this->getRows($type);
+
+        // if results is set
+        if(isset($results['hits']['hits'])
+        && !empty($results['hits']['hits'])) {
+            // get the results
+            $results = $results['hits']['hits'];
+        } else {
+            // set empty results
+            $results = array();
+        }
+
+        // set the collection
+        $collection = array();
+
+        // iterate on each results
+        foreach($results as $key => $value) {
+            // add it to our collection
+            $collection[] = array_merge(
+                $value['_source'], 
+                array('_id' => $value['_id']));
+        }
+
+        // return the collection
+        return $this->connection->collection($collection);
+    }
 
     /**
      * Returns the result as a model.
@@ -415,7 +446,35 @@ class Search extends Base
      * @param   string | null
      * @return  Eden\Elastic\Model
      */
-    public function getModel($tyoe = null) {}
+    public function getModel($type = null) 
+    {
+        // Argument test
+        Argument::i()->test(1, 'string');
+
+        // get the result
+        $result = $this->getRow($type);
+
+        // get the results first
+        $results = $this->getRows($type);
+
+        // if results is set
+        if(isset($results['hits']['hits'])
+        && !empty($results['hits']['hits'])) {
+            // get the results
+            $results = $results['hits']['hits'][0];
+        } else {
+            // set empty results
+            $results = array();
+        }
+
+        // get the model data
+        $model = array_merge(
+            $results['_source'],
+            array('_id' => $results['_id']));
+
+        // return the model
+        return $this->connection->model($model);
+    }
 
     /**
      * Get single record based on the

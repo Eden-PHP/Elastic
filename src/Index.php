@@ -112,7 +112,7 @@ class Index extends Resource
         // data set?
         if(is_array($data) && !empty($data)) {
             // set data
-            $this->setBody($data);
+            $model->set($data);
         }
 
         return $model->setConnection($this);
