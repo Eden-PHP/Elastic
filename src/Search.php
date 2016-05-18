@@ -358,6 +358,28 @@ class Search extends Base
     }
 
     /**
+     * Returns elastic Multi Search API.
+     *
+     * @return  Eden\Elastic\Search\Multi
+     */
+    public function multi()
+    {
+        // initialize multi
+        $multi = Search\Multi::i($this->connection);
+
+        // get the current data
+        $data = $this->getQuery();
+
+        // data set?
+        if(!empty($data)) {
+            // set data
+            $multi->setBody($data);
+        }
+
+        return $multi;
+    }
+
+    /**
      * Returns elastic Shards API.
      *
      * @return  Eden\Elastic\Search\Shards

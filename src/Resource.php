@@ -388,6 +388,13 @@ class Resource extends Base
 
                 // iterate on each body
                 foreach($this->body as $value) {
+                    // if empty array
+                    if(empty($value)) {
+                        $body = $body . '{}' . "\n";
+
+                        continue;
+                    }
+
                     // encode body and add new line
                     $body = $body . json_encode($value) . "\n";
                 }
@@ -433,6 +440,10 @@ class Resource extends Base
             echo 'Request Method  : ' . $this->method . PHP_EOL;
             echo 'Request Data    : ' . PHP_EOL;
             print_r($this->body);
+            if($this->binary) {
+                echo 'Binary Data     : ' . PHP_EOL;
+                echo $body . PHP_EOL;
+            }
             echo PHP_EOL;
             echo 'Request Meta    : ' . PHP_EOL;
             print_r($request->getMeta());

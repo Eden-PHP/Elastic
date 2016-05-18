@@ -3,6 +3,8 @@
 
 >**NOTE** Other advance Elasticsearch API functionalities are not yet documented.
 
+---
+
 - [Install](#install)
 - [Introduction](#intro)
 - [Low Level Request](#low-level-request)
@@ -13,7 +15,7 @@
 - [Collection](#collection)
 - [Contributing](#contributing)
 
-----
+---
 
 <a name="install"></a>
 ## Install
