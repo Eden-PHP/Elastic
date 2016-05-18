@@ -440,6 +440,7 @@ class Resource extends Base
             echo 'Request Method  : ' . $this->method . PHP_EOL;
             echo 'Request Data    : ' . PHP_EOL;
             print_r($this->body);
+            echo PHP_EOL;
             if($this->binary) {
                 echo 'Binary Data     : ' . PHP_EOL;
                 echo $body . PHP_EOL;
