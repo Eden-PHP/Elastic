@@ -217,6 +217,15 @@ $user = $client
 
 Most of the magical *Eden MySQL's search functionality can be accessed in search class e.g filterBy, sortBy, setStart, setRange etc.
 
+**Other useful methods**
+
+- `->getRow()` - Get the results limit by 1
+- `->getCollection()` - Get the results as a collection
+- `->getModel()` - Get the results as a model
+- `->getQuery()` - Returns the current search query
+
+> NOTE The magic methods from the search class is using the Query Builder class internally, so if you are going to do something like `->setAnything(value)` the anything key will be added to the query builder instance inside the search instance together with it's value. Another thing to consider is that the `->getModel()` method will return a single Eden\Elastic\Model instance the same as `->getCollection()` that will return the Eden\Elastic\Collection instance so that way we can make the search functionality more flexible.
+
 ---
 
 <a name="query"></a>
