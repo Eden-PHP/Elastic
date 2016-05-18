@@ -1,8 +1,6 @@
 ![logo](http://eden.openovate.com/assets/images/cloud-social.png) Eden Elastic Search
 ====
 
----
-
 - [Install](#install)
 - [Introduction](#intro)
 - [Low Level Request](#low-level-request)
