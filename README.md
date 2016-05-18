@@ -396,7 +396,7 @@ $collection = $client
 - `->insert('tweet')` - Insert the collection of model to index type tweet, no upserts, just strict data insertion
 - `->update('tweet')` - Updates the collection of model from index type tweet
 - `->remove('tweet')` - Remove the collection of model from index type tweet
-- `->add(array)       - Add an array or model to the collection
+- `->add(array)`       - Add an array or model to the collection
 - `->set(array)`      - Set the collection of array or model
 - `->get(false)`      - Get the collection data
 
