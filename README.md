@@ -27,7 +27,7 @@
 The following documentation uses `eden()` in its example reference. Enabling this function requires an extra step as descirbed in this section which is not required if you access this package using the following.
 
 ```
-Eden\Mysql\Index::i();
+Eden\Elastic\Index::i([HOST:PORT], [INDEX]);
 ```
 
 When using composer, there is not an easy way to access functions from packages. As a workaround, adding this constant in your code will allow `eden()` to be available after. 
