@@ -207,7 +207,7 @@ class Search extends Base
             // if arg isn't set
             if (!isset($args[0])) {
                 // default is null
-                $args[0] = 'DESC';
+                $args[0] = 'desc';
             }
 
             // add it to builder

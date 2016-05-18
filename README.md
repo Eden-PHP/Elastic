@@ -5,7 +5,7 @@
 
 - [Install](#install)
 - [Introduction](#intro)
-- [Low Level Request](#low-level)
+- [Low Level Request](#low-level-request)
 - [Data Manipulation](#manipulation)
 - [Searching Data](#search)
 - [Query Builder](#query)
@@ -195,15 +195,202 @@ $tweets = array(array('_id' => 1), array('_id' => 2));
 $response = $client->getRows($tweets, 'tweet');
 ```
 
+>**NOTE** The _id field is very important because it will be the basis of all the basic crud functionality.
+
 ---
 
 <a name="search"></a>
 ## Searching Data
 
+The code below will show how simple it is to search for an indexed data using
+Eden Elasticsearch Search class.
+
+**Figure 10. Basic Searching using Search class**
+
+```php
+$user = $client
+->search('tweet')
+->filterByUser('Charles')
+->sortByActive('desc')
+->setStart(0)
+->setRange(1)
+->getRows();
+```
+
+Most of the magical *Eden MySQL's search functionality can be accessed in search class e.g filterBy, sortBy, setStart, setRange etc.
+
 ---
 
 <a name="query"></a>
 ## Query Builder
+
+Elasticsearch's Query DSL is a complex query data structure, in Eden Elasticsearch we make this more simple using the Query Builder class. The query builder class contains simple API
+functionalities that will help you build a simple to complex query data structure. below is an example on how it works.
+
+**Figure 11. Building Complex queries using Query Builder**
+
+```php
+$query = $client
+->query()
+->setTree('query.bool.must.term.user', 'kimchy')
+->setTree('query.bool.should.term.user', 'charles')
+->setTree('query.filter.or.0.term.active', 1)
+->addTree('query.filter.or', array(
+    'term' => array('user' => 'Charles')
+))
+->getQuery();
+```
+**Query Output:**
+```
+Array
+(
+    [query] => Array
+        (
+            [bool] => Array
+                (
+                    [must] => Array
+                        (
+                            [term] => Array
+                                (
+                                    [user] => kimchy
+                                )
+
+                        )
+
+                    [should] => Array
+                        (
+                            [term] => Array
+                                (
+                                    [user] => charles
+                                )
+
+                        )
+
+                )
+
+            [filter] => Array
+                (
+                    [or] => Array
+                        (
+                            [0] => Array
+                                (
+                                    [term] => Array
+                                        (
+                                            [active] => 1
+                                        )
+
+                                )
+
+                            [1] => Array
+                                (
+                                    [term] => Array
+                                        (
+                                            [user] => Charles
+                                        )
+
+                                )
+
+                        )
+
+                )
+
+        )
+
+)
+```
+
+**Figure 12. Using the Query Builder output in search class**
+
+```php
+$query = $client
+->setTree('query.bool.term.user', 'kimchy')
+->setTree('sort.0.active.order', 'desc')
+->getQuery();
+
+$response = $client
+->search('tweet')
+->setBody($query)
+->getRows();
+```
+
+---
+
+<a name="model"></a>
+## Model
+
+The model class of Eden Elasticsearch is derived from the awesome *Eden MySQL Model* class, most of the functionality is the same as how the *Eden MySQL Model* works except the fact that setting the '_id' field has it's own functionality. Let's take a look on how it works.
+
+
+**Figure 13. Basic Elasticsearch Model**
+
+```php
+$user = array(
+    '_id'       => 10,
+    'user'      => 'Foo',
+    'message'   => 'I am foo!'
+);
+
+$response = $client
+->model($user)
+->save('tweet')
+->get(false);
+```
+
+**Figure 14. Setting Model data magically**
+
+```php
+$response = $client
+->model()
+->setId(10) // IMPORTANT
+->setUser('charles')
+->setMessage('This is created using a model!')
+->save('tweet')
+->get(false);
+```
+
+**Other useful methods**
+
+- `->insert('tweet')` - No upsert, strict data insertion only
+- `->remove('tweet')` - Remove the model from the index type tweet
+- `->update('tweet')` - Update the model from the index type tweet
+- `->get(false)`        - Returns the model
+
+---
+
+<a name="collection"></a>
+## Collection
+
+The collection class is also derived from the awesome *Eden MySQL Collection* class, the collection class do exactly what the models can do, except the fact that it can process or manipulate bulk or collection of models in a simple manner. Below will show how collection works with Elasticsearch.
+
+**Figure 15. Basic Elasticsearch Collection**
+
+```php
+$tweets = array(
+  array(
+      '_id'         => 10,
+      'user'        => 'Foo',
+      'message'     => 'I am foo!'
+  ),
+  array(
+      '_id'         => 11,
+      'user'        => 'Foo 2',
+      'message'     => 'I am foo 2!'
+  )
+);
+
+$collection = $client
+->collection($tweets)
+->save('tweet');
+```
+
+**Other useful methods**
+ 
+- `->insert('tweet')` - Insert the collection of model to index type tweet, no upserts, just strict data insertion
+- `->update('tweet')` - Updates the collection of model from index type tweet
+- `->remove('tweet')` - Remove the collection of model from index type tweet
+- `->add(array)       - Add an array or model to the collection
+- `->set(array)`      - Set the collection of array or model
+- `->get(false)`      - Get the collection data
 
 ---
 
