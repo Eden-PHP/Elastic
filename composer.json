@@ -2,7 +2,7 @@
     "name": "eden/elastic",
     "type": "library",
     "description": "Elastic Search library",
-    "keywords": ["eden", "library"],
+    "keywords": ["eden", "library", "elastic", "elasticsearch", "index", "search"],
     "homepage": "http://eden-php.com",
     "license": "MIT",
     "authors": [
